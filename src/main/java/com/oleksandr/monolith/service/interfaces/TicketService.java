@@ -1,6 +1,7 @@
-package com.oleksandr.monolith.service.interfaces.tmp_withRealization;
+package com.oleksandr.monolith.service.interfaces;
 
 import com.oleksandr.monolith.dto.TicketDTO;
+import com.oleksandr.monolith.entity.Ticket;
 import com.oleksandr.monolith.entity.enums.TICKET_STATUS;
 
 import java.util.List;
@@ -12,10 +13,15 @@ public interface TicketService {
     List<TicketDTO> getTicketsByEvent(UUID eventId);
     List<TicketDTO> getAvailableTickets(UUID eventId);
     TicketDTO getTicketById(UUID ticketId);
-
     // Внутренние операции
     TicketDTO updateTicketStatus(UUID ticketId, TICKET_STATUS status);
-
     // CRUD для админки (позже)
     TicketDTO createTicket(TicketDTO dto);
+
+    Ticket findEntityById(UUID ticketId);        // throws if not found
+
+    // Бизнес-операции, выполняющие save внутри себя
+    Ticket reserveTicket(UUID ticketId);        // ставит status = RESERVED и saves
+    Ticket markAsSold(UUID ticketId);           // status = SOLD и saves
+    Ticket updateStatus(UUID ticketId, TICKET_STATUS status); // general
 }

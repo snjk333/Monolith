@@ -13,5 +13,5 @@ public class TicketDTO {
     private UUID id;
     private String type;
     private double price;
-    private TICKET_STATUS status;
+    private String status;
 }

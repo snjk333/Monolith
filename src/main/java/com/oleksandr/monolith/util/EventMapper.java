@@ -5,6 +5,7 @@ import com.oleksandr.monolith.entity.Event;
 import com.oleksandr.monolith.entity.Ticket;
 import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Component
@@ -23,27 +24,28 @@ public class EventMapper {
     }
 
 
-    public EventDTO mapToDto(Event event) {
+    public EventDTO mapToDto(Event e) {
+        if (e == null) return null;
         return EventDTO.builder()
-                .id(event.getId())
-                .name(event.getName())
-                .description(event.getDescription())
-                .imageURL(event.getImageURL())
-                .tickets(ticketMapper.mapEntityListToDtoList(event.getTickets()))
-                .eventDate(String.valueOf(event.getEventDate()))
-                .location(event.getLocation())
+                .id(e.getId())
+                .name(e.getName())
+                .description(e.getDescription())
+                .imageURL(e.getImageURL())
+                .tickets(e.getTickets() != null ? ticketMapper.mapEntityListToDtoList(e.getTickets()) : List.of())
+                .eventDate(e.getEventDate() != null ? e.getEventDate().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : null)
+                .location(e.getLocation())
                 .build();
     }
 
     public Event mapToEntity(EventDTO dto) {
-
-        LocalDateTime eventDate = LocalDateTime.parse(dto.getEventDate());
-        List<Ticket> tickets = ticketMapper.mapTicketsListFromDto(dto.getTickets());
-
+        if (dto == null) return null;
+        LocalDateTime eventDate = null;
+        if (dto.getEventDate() != null) {
+            eventDate = LocalDateTime.parse(dto.getEventDate(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        }
+        List<Ticket> tickets = ticketMapper.mapTicketsListFromDto(dto.getTickets()); // returns empty list if null
         return new Event(dto.getId(), dto.getName(), dto.getDescription(),
-                dto.getLocation(), eventDate, dto.getImageURL(),
-                tickets);
-
+                dto.getLocation(), eventDate, dto.getImageURL(), tickets);
     }
 
     public Event updateEventInformation(Event eventToChange, EventDTO dto) {
