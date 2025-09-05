@@ -9,12 +9,17 @@ import java.util.List;
 @Component
 public class BookingMapper {
     public BookingDTO mapToDto(Booking booking) {
-        //todo
-        throw new RuntimeException("Not implemented yet");
+        return BookingDTO.builder()
+                .id(booking.getId())
+                .status(booking.getStatus().toString())
+                .ticketId(booking.getTicket().getId())
+                .userId(booking.getUser().getId())
+                .build();
     }
 
     public List<BookingDTO> mapEntityListToDtoList(List<Booking> bookings) {
-        //todo
-        throw new RuntimeException("Not implemented yet");
+        return bookings.stream()
+                .map(this::mapToDto)
+                .toList();
     }
 }
