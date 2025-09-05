@@ -8,7 +8,7 @@ import java.util.List;
 
 @Component
 public class BookingMapper {
-    public BookingDTO mapToDto(Booking save) {
+    public BookingDTO mapToDto(Booking booking) {
         //todo
         throw new RuntimeException("Not implemented yet");
     }
