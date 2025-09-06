@@ -59,7 +59,9 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public UserDTO updateUser(UserDTO dto) {
-        return null;
+    public UserDTO updateUserInfo(UserDTO dto) {
+        User userToChange = this.getOrCreateUser(dto.getId());
+        User UpdatedUser = userMapper.updateUserInformation(userToChange, dto);//todo exeption
+        return userMapper.mapToDto(userRepository.save(UpdatedUser));//todo exeption
     }
 }

@@ -1,9 +1,12 @@
 package com.oleksandr.monolith.util;
 
+import com.oleksandr.monolith.dto.EventDTO;
 import com.oleksandr.monolith.dto.UserDTO;
+import com.oleksandr.monolith.entity.Event;
 import com.oleksandr.monolith.entity.User;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 @Component
@@ -36,5 +39,15 @@ public class UserMapper {
         user.setEmail(userDTO.getEmail());
         if (user.getBookings() == null) user.setBookings(new ArrayList<>());
         return user;
+    }
+
+    public User updateUserInformation(User userToChange, UserDTO dto) {
+        if (dto.getUsername() != null) {
+            userToChange.setUsername(dto.getUsername());
+        }
+        if (dto.getEmail() != null) {
+            userToChange.setEmail(dto.getEmail());
+        }
+        return userToChange;
     }
 }

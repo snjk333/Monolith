@@ -17,5 +17,5 @@ public interface UserService {
     UserDTO getUserDto(UUID userId);
 
     // Частичный апдейт (PATCH) — только локальные данные
-    UserDTO updateUser(UserDTO dto);
+    UserDTO updateUserInfo(UserDTO dto);
 }
