@@ -6,4 +6,6 @@ import java.util.UUID;
 
 public interface AuthClientService {
     UserDTO getUserById(UUID userId);
+
+    UserDTO updateUser(UserDTO userDto);
 }
