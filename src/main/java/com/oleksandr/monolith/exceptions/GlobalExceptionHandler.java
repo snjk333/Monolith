@@ -1,5 +1,6 @@
 package com.oleksandr.monolith.exceptions;
 
+import jakarta.persistence.OptimisticLockException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -24,6 +25,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleConcurrent(ConcurrentUpdateException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(Map.of("error", "Concurrent modification, try again", "detail", ex.getMessage()));
+    }
+
+    @ExceptionHandler(OptimisticLockException.class)
+    public ResponseEntity<String> handleOptimisticLock(OptimisticLockException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body("Данные были изменены другим пользователем. Обновите страницу.");
     }
 
     @ExceptionHandler(Exception.class)

@@ -10,7 +10,7 @@ public interface EventService {
 
     // Основное
     List<EventDTO> getAllEvents();
-    EventDTO getEventById(UUID eventId);
+    EventDTO getEventDTOById(UUID eventId);
     List<EventDTO> getUpcomingEvents();
 
     // CRUD (админка, позже)
