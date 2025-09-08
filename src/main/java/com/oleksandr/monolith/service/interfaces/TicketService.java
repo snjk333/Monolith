@@ -20,8 +20,7 @@ public interface TicketService {
 
     Ticket findEntityById(UUID ticketId);        // throws if not found
 
-    // Бизнес-операции, выполняющие save внутри себя
-    Ticket reserveTicket(UUID ticketId);        // ставит status = RESERVED и saves
-    Ticket markAsSold(UUID ticketId);           // status = SOLD и saves
     Ticket updateStatus(UUID ticketId, TICKET_STATUS status); // general
+
+    Ticket save(Ticket ticket);
 }

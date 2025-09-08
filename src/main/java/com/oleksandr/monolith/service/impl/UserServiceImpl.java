@@ -4,11 +4,13 @@ import com.oleksandr.monolith.dto.BookingDTO;
 import com.oleksandr.monolith.dto.UserDTO;
 import com.oleksandr.monolith.entity.Booking;
 import com.oleksandr.monolith.entity.User;
+import com.oleksandr.monolith.exceptions.ResourceNotFoundException;
 import com.oleksandr.monolith.repository.UserRepository;
 import com.oleksandr.monolith.service.interfaces.AuthClientService;
 import com.oleksandr.monolith.service.interfaces.UserService;
 import com.oleksandr.monolith.util.BookingMapper;
 import com.oleksandr.monolith.util.UserMapper;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,14 +43,19 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public User getOrCreateUser(UUID userId) {
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) {
-            UserDTO userDTO = authClientService.getUserById(userId); //todo exception
-            user = userMapper.mapToEntity(userDTO);
-            userRepository.save(user);
-        }
-        return user;
+        return userRepository.findById(userId).orElseGet(() -> {
+            UserDTO userDTO = authClientService.getUserById(userId);
+            User user = userMapper.mapToEntity(userDTO);
+            try {
+                return userRepository.saveAndFlush(user);
+            } catch (DataIntegrityViolationException e) {
+                return userRepository.findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found after race condition"));
+            }
+        });
     }
+
+
 
     @Transactional(readOnly = true)
     @Override

@@ -4,8 +4,10 @@ import com.oleksandr.monolith.dto.TicketDTO;
 import com.oleksandr.monolith.entity.Ticket;
 import com.oleksandr.monolith.entity.enums.TICKET_STATUS;
 import org.springframework.stereotype.Component;
-
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
 
 @Component
 public class TicketMapper {
@@ -14,7 +16,7 @@ public class TicketMapper {
         if (tickets == null) return List.of();
         return tickets.stream()
                 .map(this::mapToEntity)
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     public Ticket mapToEntity(TicketDTO dto) {

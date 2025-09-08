@@ -12,7 +12,7 @@ public interface BookingService {
     List<BookingDTO> getBookingsByUser(UUID userId);
 
     // Второстепенные
-    BookingDTO cancelBooking(UUID bookingId);
-    BookingDTO completeBooking(UUID bookingId);
+    BookingDTO cancelBooking(UUID bookingId, UUID userId);
+    BookingDTO completeBooking(UUID bookingId, UUID userId);
     boolean isTicketAvailable(UUID ticketId);
 }

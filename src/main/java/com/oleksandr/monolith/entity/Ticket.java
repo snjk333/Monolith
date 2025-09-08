@@ -28,8 +28,13 @@ public class Ticket {
     private double price;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private TICKET_STATUS status;
 
     @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Booking> bookings;
+
+    @Version
+    @Column(nullable = false)
+    private Long version;
 }

@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,7 +29,19 @@ public class Event {
     private String imageURL;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Ticket> tickets;
+    private List<Ticket> tickets = new ArrayList<>();;
 
+    @Version
+    @Column(nullable = false)
+    private Long version;
 
+    public Event(UUID id, String name, String description, String location, LocalDateTime eventDate, String imageURL, List<Ticket> tickets) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.location = location;
+        this.eventDate = eventDate;
+        this.imageURL = imageURL;
+        this.tickets = tickets;
+    }
 }

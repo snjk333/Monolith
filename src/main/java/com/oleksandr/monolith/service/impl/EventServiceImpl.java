@@ -2,13 +2,18 @@ package com.oleksandr.monolith.service.impl;
 
 import com.oleksandr.monolith.dto.EventDTO;
 import com.oleksandr.monolith.entity.Event;
+import com.oleksandr.monolith.entity.Ticket;
+import com.oleksandr.monolith.exceptions.ResourceAlreadyExistsException;
+import com.oleksandr.monolith.exceptions.ResourceNotFoundException;
 import com.oleksandr.monolith.repository.EventRepository;
 import com.oleksandr.monolith.service.interfaces.EventService;
 import com.oleksandr.monolith.util.EventMapper;
+import com.oleksandr.monolith.util.TicketMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,12 +22,13 @@ public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
+    private final TicketMapper ticketMapper;
 
-    public EventServiceImpl(EventRepository eventRepository, EventMapper eventMapper) {
+    public EventServiceImpl(EventRepository eventRepository, EventMapper eventMapper, TicketMapper ticketMapper) {
         this.eventRepository = eventRepository;
         this.eventMapper = eventMapper;
+        this.ticketMapper = ticketMapper;
     }
-
 
     @Transactional(readOnly = true)
     @Override
@@ -34,7 +40,8 @@ public class EventServiceImpl implements EventService {
     @Transactional(readOnly = true)
     @Override
     public EventDTO getEventById(UUID eventId){
-        Event event = eventRepository.findById(eventId).orElse(null);
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));;
         return eventMapper.mapToDto(event); //todo
     }
 
@@ -49,18 +56,27 @@ public class EventServiceImpl implements EventService {
     @Transactional
     @Override
     public EventDTO createEvent(EventDTO dto) {
-        Event eventFromDTO = eventMapper.mapToEntity(dto);//todo
-        Event savedEvent = eventRepository.save(eventFromDTO);
+        if (dto.getId() != null && eventRepository.existsById(dto.getId())) {
+            throw new ResourceAlreadyExistsException("Event with id " + dto.getId() + " already exists");
+        }
+
+        Event event = eventMapper.mapToEntity(dto);
+        Event savedEvent = eventRepository.saveAndFlush(event);
         return eventMapper.mapToDto(savedEvent);
     }
+
+
+
 
     @Transactional
     @Override
     public EventDTO updateEvent(UUID eventId, EventDTO dto) {
-        Event eventToChange = eventRepository.findById(eventId).orElse(null);//todo exeption
-        Event UpdatedEvent = eventMapper.updateEventInformation(eventToChange, dto);//todo exeption
-        return eventMapper.mapToDto(eventRepository.save(UpdatedEvent));//todo exeption
+        Event eventToChange = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
 
+        Event updatedEvent = eventMapper.updateEventInformation(eventToChange, dto);
+        Event savedEvent = eventRepository.saveAndFlush(updatedEvent);
+        return eventMapper.mapToDto(savedEvent);
     }
 
     @Transactional
@@ -72,6 +88,7 @@ public class EventServiceImpl implements EventService {
     @Transactional(readOnly = true)
     @Override
     public Event findById(UUID eventID) {
-        return eventRepository.findById(eventID).orElse(null); //todo exception
+        return eventRepository.findById(eventID)
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found")); //todo exception
     }
 }

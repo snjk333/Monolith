@@ -9,7 +9,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "bookings")
+@Table(name = "bookings",
+        uniqueConstraints = @UniqueConstraint(name = "uk_bookings_ticket", columnNames = {"ticket_id"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -34,4 +35,8 @@ public class Booking {
 
     @Enumerated(EnumType.STRING)
     private BOOKING_STATUS status;
+
+    @Version
+    @Column(nullable = false)
+    private Long version;
 }
