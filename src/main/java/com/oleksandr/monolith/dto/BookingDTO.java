@@ -1,6 +1,9 @@
 package com.oleksandr.monolith.dto;
 
+import com.oleksandr.monolith.entity.enums.BOOKING_STATUS;
 import lombok.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 @Getter
@@ -9,8 +12,15 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 public class BookingDTO {
+
     private UUID id;
+
+    @NotNull
     private UUID ticketId;
+
+    @NotNull
     private UUID userId;
-    private String status;
+
+    @NotNull
+    private BOOKING_STATUS status;
 }

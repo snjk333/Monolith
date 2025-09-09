@@ -3,69 +3,57 @@ package com.oleksandr.monolith.util;
 import com.oleksandr.monolith.dto.TicketDTO;
 import com.oleksandr.monolith.entity.Ticket;
 import com.oleksandr.monolith.entity.enums.TICKET_STATUS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class TicketMapper {
 
-    private static final Logger log = LoggerFactory.getLogger(TicketMapper.class);
+    // DTO → Entity
+    public Ticket mapToEntity(TicketDTO dto) {
+        if (dto == null) return null;
 
-    public List<Ticket> mapTicketsListFromDto(List<TicketDTO> tickets) {
-        if (tickets == null) {
-            log.warn("Received null TicketDTO list, returning empty list");
-            return List.of();
-        }
-        log.info("Mapping list of {} TicketDTOs to Ticket entities", tickets.size());
-        List<Ticket> entities = tickets.stream()
-                .map(this::mapToEntity)
-                .collect(Collectors.toCollection(ArrayList::new));
-        log.info("Mapped {} Ticket entities successfully", entities.size());
-        return entities;
+        Ticket ticket = new Ticket();
+        ticket.setId(dto.getId());
+        ticket.setPrice(dto.getPrice());
+        ticket.setType(dto.getType());
+        ticket.setStatus(dto.getStatus() != null
+                ? dto.getStatus()
+                : TICKET_STATUS.AVAILABLE); // дефолтное значение
+        return ticket;
     }
 
-    public Ticket mapToEntity(TicketDTO dto) {
-        if (dto == null) {
-            log.warn("Received null TicketDTO, returning null Ticket entity");
-            return null;
+    public List<Ticket> mapTicketsListFromDto(List<TicketDTO> dtos) {
+        if (dtos == null || dtos.isEmpty()) return List.of();
+        List<Ticket> tickets = new ArrayList<>();
+        for (TicketDTO dto : dtos) {
+            Ticket t = mapToEntity(dto);
+            if (t != null) tickets.add(t);
         }
-        Ticket t = new Ticket();
-        t.setId(dto.getId());
-        t.setPrice(dto.getPrice());
-        t.setStatus(dto.getStatus() != null ? TICKET_STATUS.valueOf(dto.getStatus()) : TICKET_STATUS.AVAILABLE);
-        log.info("Mapped TicketDTO (id={}) to Ticket entity successfully", dto.getId());
-        return t;
+        return tickets;
+    }
+
+    // Entity → DTO
+    public TicketDTO mapToDto(Ticket ticket) {
+        if (ticket == null) return null;
+
+        return TicketDTO.builder()
+                .id(ticket.getId())
+                .type(ticket.getType())
+                .price(ticket.getPrice())
+                .status(ticket.getStatus() != null ? ticket.getStatus() : null)
+                .build();
     }
 
     public List<TicketDTO> mapEntityListToDtoList(List<Ticket> tickets) {
-        if (tickets == null) {
-            log.warn("Received null Ticket list, returning empty list");
-            return List.of();
+        if (tickets == null || tickets.isEmpty()) return List.of();
+        List<TicketDTO> dtos = new ArrayList<>();
+        for (Ticket t : tickets) {
+            TicketDTO dto = mapToDto(t);
+            if (dto != null) dtos.add(dto);
         }
-        log.info("Mapping list of {} Ticket entities to TicketDTOs", tickets.size());
-        List<TicketDTO> dtos = tickets.stream()
-                .map(this::mapToDto)
-                .toList();
-        log.info("Mapped {} TicketDTOs successfully", dtos.size());
         return dtos;
-    }
-
-    public TicketDTO mapToDto(Ticket t) {
-        if (t == null) {
-            log.warn("Received null Ticket entity, returning null TicketDTO");
-            return null;
-        }
-        TicketDTO dto = TicketDTO.builder()
-                .id(t.getId())
-                .price(t.getPrice())
-                .status(t.getStatus() != null ? t.getStatus().name() : null)
-                .build();
-        log.info("Mapped Ticket entity (id={}) to TicketDTO successfully", t.getId());
-        return dto;
     }
 }

@@ -1,17 +1,15 @@
 package com.oleksandr.monolith.util;
 
+import com.oleksandr.monolith.dto.BookingDTO;
 import com.oleksandr.monolith.dto.UserDTO;
 import com.oleksandr.monolith.entity.User;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class UserMapper {
-
-    private static final Logger log = LoggerFactory.getLogger(UserMapper.class);
 
     private final BookingMapper bookingMapper;
 
@@ -19,46 +17,49 @@ public class UserMapper {
         this.bookingMapper = bookingMapper;
     }
 
+    // Entity → DTO
     public UserDTO mapToDto(User user) {
-        if (user == null) {
-            log.warn("Received null User entity, returning null UserDTO");
-            return null;
-        }
-        UserDTO dto = UserDTO.builder()
+        if (user == null) return null;
+
+        List<BookingDTO> bookingsDto = user.getBookings() != null
+                ? bookingMapper.mapEntityListToDtoList(user.getBookings())
+                : List.of();
+
+        return UserDTO.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .bookings(bookingMapper.mapEntityListToDtoList(user.getBookings()))
+                .role(user.getRole())
+                .bookings(bookingsDto)
                 .build();
-        log.info("Mapped User entity (id={}) to UserDTO successfully with {} bookings",
-                user.getId(), user.getBookings() != null ? user.getBookings().size() : 0);
-        return dto;
     }
 
-    public User mapToEntity(UserDTO userDTO) {
-        if (userDTO == null) {
-            log.warn("Received null UserDTO, returning null User entity");
-            return null;
-        }
+    // DTO → Entity
+    public User mapToEntity(UserDTO dto) {
+        if (dto == null) return null;
+
         User user = new User();
-        user.setId(userDTO.getId());
-        user.setUsername(userDTO.getUsername());
-        user.setEmail(userDTO.getEmail());
-        if (user.getBookings() == null) {
-            user.setBookings(new ArrayList<>());
-        }
-        log.info("Mapped UserDTO (id={}) to User entity successfully", userDTO.getId());
+        user.setId(dto.getId());
+        user.setUsername(dto.getUsername());
+        user.setEmail(dto.getEmail());
+        user.setRole(dto.getRole());
+        user.setBookings(new ArrayList<>()); // пустой список, позже маппится отдельно
         return user;
     }
 
-    public User updateUserInformation(User userToChange, UserDTO dto) {
-        if (dto.getUsername() != null) {
-            userToChange.setUsername(dto.getUsername());
-        }
-        if (dto.getEmail() != null) {
-            userToChange.setEmail(dto.getEmail());
-        }
-        log.info("Updated User entity (id={}) with new information", userToChange.getId());
-        return userToChange;
+    // Обновление существующего пользователя
+    public User updateUserInformation(User user, UserDTO dto) {
+        if (dto.getUsername() != null) user.setUsername(dto.getUsername());
+        if (dto.getEmail() != null) user.setEmail(dto.getEmail());
+        if (dto.getRole() != null) user.setRole(dto.getRole());
+        return user;
+    }
+
+    // Список сущностей → список DTO
+    public List<UserDTO> mapListToDtoList(List<User> users) {
+        if (users == null || users.isEmpty()) return List.of();
+        return users.stream()
+                .map(this::mapToDto)
+                .toList();
     }
 }
