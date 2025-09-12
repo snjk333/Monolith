@@ -1,24 +1,21 @@
 package com.oleksandr.monolith.Ticket;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.UUID;
 
 public interface TicketService {
 
-    // Основное
-    List<TicketDTO> getTicketsByEvent(UUID eventId);
-    List<TicketDTO> getAvailableTickets(UUID eventId);
-    TicketDTO getTicketById(UUID ticketId);
-    // Внутренние операции
-    TicketDTO updateTicketStatus(UUID ticketId, TICKET_STATUS status);
-    // CRUD для админки (позже)
-    TicketDTO createTicket(TicketDTO dto);
+    @Transactional
+    Ticket createTicket(Ticket ticket);
 
-    Ticket findEntityById(UUID ticketId);        // throws if not found
+    @Transactional
+    Ticket updateStatus(UUID ticketId, TICKET_STATUS status);
 
-    Ticket updateStatus(UUID ticketId, TICKET_STATUS status); // general
+    @Transactional(readOnly = true)
+    Ticket findById(UUID ticketId);
 
-    Ticket save(Ticket ticket);
-
-    List<Ticket> findTickets(List<Ticket> tickets);
+    @Transactional(readOnly = true)
+    List<Ticket> findTicketsByEventId(UUID eventId);
 }
