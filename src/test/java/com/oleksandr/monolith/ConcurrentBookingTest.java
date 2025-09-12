@@ -1,13 +1,13 @@
 package com.oleksandr.monolith;
 
-import com.oleksandr.monolith.dto.BookingDTO;
-import com.oleksandr.monolith.dto.EventDTO;
-import com.oleksandr.monolith.dto.TicketDTO;
-import com.oleksandr.monolith.dto.UserDTO;
-import com.oleksandr.monolith.service.interfaces.BookingService;
-import com.oleksandr.monolith.service.interfaces.EventService;
-import com.oleksandr.monolith.service.interfaces.UserService;
-import com.oleksandr.monolith.service.interfaces.AuthClientService;
+import com.oleksandr.monolith.Booking.BookingDTO;
+import com.oleksandr.monolith.Event.EventDTO;
+import com.oleksandr.monolith.Ticket.TicketDTO;
+import com.oleksandr.monolith.Booking.BookingService;
+import com.oleksandr.monolith.Event.EventService;
+import com.oleksandr.monolith.User.UserDTO;
+import com.oleksandr.monolith.User.UserService;
+import com.oleksandr.monolith.integration.auth.AuthClientService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;

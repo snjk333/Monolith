@@ -1,0 +1,31 @@
+package com.oleksandr.monolith.User;
+
+import com.oleksandr.monolith.Booking.Booking;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.util.List;
+import java.util.UUID;
+
+@Entity
+@Table(name = "users")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(of = "id")
+public class User {
+
+    @Id
+    @GeneratedValue(generator = "UUID")
+    private UUID id;
+
+    private String username;
+    private String email;
+
+    @Enumerated(EnumType.STRING)
+    private USER_ROLE role;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Booking> bookings;
+}
