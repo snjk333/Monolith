@@ -2,10 +2,12 @@ package com.oleksandr.monolith.service.impl;
 
 import com.oleksandr.monolith.dto.EventDTO;
 import com.oleksandr.monolith.entity.Event;
+import com.oleksandr.monolith.entity.Ticket;
 import com.oleksandr.monolith.exceptions.ResourceAlreadyExistsException;
 import com.oleksandr.monolith.exceptions.ResourceNotFoundException;
 import com.oleksandr.monolith.repository.EventRepository;
 import com.oleksandr.monolith.service.interfaces.EventService;
+import com.oleksandr.monolith.service.interfaces.TicketService;
 import com.oleksandr.monolith.util.EventMapper;
 import com.oleksandr.monolith.util.TicketMapper;
 import org.slf4j.Logger;
@@ -14,8 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class EventServiceImpl implements EventService {
@@ -23,44 +25,16 @@ public class EventServiceImpl implements EventService {
     private static final Logger log = LoggerFactory.getLogger(EventServiceImpl.class);
 
     private final EventRepository eventRepository;
+    private final TicketService ticketService;
     private final EventMapper eventMapper;
     private final TicketMapper ticketMapper;
 
-    public EventServiceImpl(EventRepository eventRepository, EventMapper eventMapper, TicketMapper ticketMapper) {
+    public EventServiceImpl(EventRepository eventRepository, TicketService ticketService,
+                            EventMapper eventMapper, TicketMapper ticketMapper) {
         this.eventRepository = eventRepository;
+        this.ticketService = ticketService;
         this.eventMapper = eventMapper;
         this.ticketMapper = ticketMapper;
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public List<EventDTO> getAllEvents() {
-        log.info("Fetching all events from repository");
-        List<Event> events = eventRepository.findAll();
-        log.info("Fetched {} events", events.size());
-        return eventMapper.mapListToDtoList(events);
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public EventDTO getEventDTOById(UUID eventId){
-        log.info("Fetching event by ID: {}", eventId);
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> {
-                    log.warn("Event not found with ID: {}", eventId);
-                    return new ResourceNotFoundException("Event not found with ID: " + eventId);
-                });
-        log.info("Event found: {}", event.getName());
-        return eventMapper.mapToDto(event);
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public List<EventDTO> getUpcomingEvents(){
-        log.info("Fetching upcoming events after {}", LocalDateTime.now());
-        List<Event> events = eventRepository.findByEventDateAfter(LocalDateTime.now());
-        log.info("Fetched {} upcoming events", events.size());
-        return eventMapper.mapListToDtoList(events);
     }
 
     @Transactional
@@ -74,9 +48,19 @@ public class EventServiceImpl implements EventService {
         }
 
         Event event = eventMapper.mapToEntity(dto);
-        Event savedEvent = eventRepository.saveAndFlush(event);
-        log.info("Event created successfully with ID: {}", savedEvent.getId());
-        return eventMapper.mapToDto(savedEvent);
+
+        // Устанавливаем Event в тикетах и создаём новые тикеты
+        if (dto.getTickets() != null) {
+            List<Ticket> tickets = ticketMapper.mapTicketsListFromDto(dto.getTickets());
+            tickets.forEach(t -> t.setEvent(event));
+            event.setTickets(tickets);
+        } else {
+            event.setTickets(new ArrayList<>());
+        }
+
+        Event saved = eventRepository.saveAndFlush(event);
+        log.info("Event created successfully with ID: {}", saved.getId());
+        return eventMapper.mapToDto(saved);
     }
 
     @Transactional
@@ -84,41 +68,89 @@ public class EventServiceImpl implements EventService {
     public EventDTO updateEvent(UUID eventId, EventDTO dto) {
         log.info("Updating event with ID: {}", eventId);
 
-        Event eventToChange = eventRepository.findById(eventId)
-                .orElseThrow(() -> {
-                    log.warn("Event update failed: Event not found with ID {}", eventId);
-                    return new ResourceNotFoundException("Event not found: " + eventId);
-                });
+        Event existingEvent = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
 
-        Event updatedEvent = eventMapper.updateEventInformation(eventToChange, dto);
-        Event savedEvent = eventRepository.saveAndFlush(updatedEvent);
+        // Обновляем основные поля через mapper
+        Event updatedEvent = eventMapper.updateEventInformation(existingEvent, dto);
 
-        log.info("Event updated successfully with ID: {}", savedEvent.getId());
-        return eventMapper.mapToDto(savedEvent);
+        // --- reconcile тикетов ---
+        if (dto.getTickets() != null) {
+            List<Ticket> incomingTickets = ticketMapper.mapTicketsListFromDto(dto.getTickets());
+            Map<UUID, Ticket> existingMap = updatedEvent.getTickets().stream()
+                    .filter(t -> t.getId() != null)
+                    .collect(Collectors.toMap(Ticket::getId, t -> t));
+
+            List<Ticket> finalTickets = new ArrayList<>();
+
+            for (Ticket t : incomingTickets) {
+                if (t.getId() == null) {
+                    // новый тикет
+                    t.setEvent(updatedEvent);
+                    finalTickets.add(t);
+                } else if (existingMap.containsKey(t.getId())) {
+                    // обновляем существующий
+                    Ticket existing = existingMap.get(t.getId());
+                    existing.setPrice(t.getPrice());
+                    existing.setType(t.getType());
+                    existing.setStatus(t.getStatus() != null ? t.getStatus() : existing.getStatus());
+                    finalTickets.add(existing);
+                    existingMap.remove(t.getId());
+                } else {
+                    // пришёл тикет с id, которого нет в базе → добавляем
+                    t.setEvent(updatedEvent);
+                    finalTickets.add(t);
+                }
+            }
+
+            // удаляем все тикеты, которые не пришли в патче
+            // orphanRemoval=true обеспечит удаление из БД
+            updatedEvent.getTickets().clear();
+            updatedEvent.getTickets().addAll(finalTickets);
+        }
+
+        Event saved = eventRepository.saveAndFlush(updatedEvent);
+        log.info("Event updated successfully with ID: {}", saved.getId());
+        return eventMapper.mapToDto(saved);
     }
 
     @Transactional
     @Override
     public void deleteEvent(UUID eventId) {
         log.info("Deleting event with ID: {}", eventId);
-
         if (!eventRepository.existsById(eventId)) {
-            log.warn("Event delete failed: Event not found with ID {}", eventId);
             throw new ResourceNotFoundException("Event not found: " + eventId);
         }
-
         eventRepository.deleteById(eventId);
         log.info("Event deleted successfully with ID: {}", eventId);
     }
 
     @Transactional(readOnly = true)
     @Override
+    public EventDTO getEventDTOById(UUID eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found with ID: " + eventId));
+        return eventMapper.mapToDto(event);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<EventDTO> getAllEvents() {
+        List<Event> events = eventRepository.findAll();
+        return eventMapper.mapListToDtoList(events);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<EventDTO> getUpcomingEvents() {
+        List<Event> events = eventRepository.findByEventDateAfter(LocalDateTime.now());
+        return eventMapper.mapListToDtoList(events);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
     public Event findById(UUID eventId) {
-        log.info("Finding event entity by ID: {}", eventId);
         return eventRepository.findById(eventId)
-                .orElseThrow(() -> {
-                    log.warn("Event not found with ID: {}", eventId);
-                    return new ResourceNotFoundException("Event not found with ID: " + eventId);
-                });
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found with ID: " + eventId));
     }
 }

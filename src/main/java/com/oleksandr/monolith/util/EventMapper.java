@@ -6,7 +6,7 @@ import com.oleksandr.monolith.entity.Ticket;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 @Component
 public class EventMapper {
@@ -19,7 +19,7 @@ public class EventMapper {
 
     // DTO → Entity
     public Event mapToEntity(EventDTO dto) {
-        if (dto == null) return null;
+        if (dto == null) throw new IllegalArgumentException("EventDTO cannot be null");
 
         Event event = new Event();
         event.setId(dto.getId());
@@ -27,7 +27,7 @@ public class EventMapper {
         event.setDescription(dto.getDescription());
         event.setLocation(dto.getLocation());
         event.setImageURL(dto.getImageURL());
-        event.setEventDate(dto.getEventDate()); // LocalDateTime теперь напрямую
+        event.setEventDate(dto.getEventDate());
 
         if (dto.getTickets() != null) {
             List<Ticket> tickets = ticketMapper.mapTicketsListFromDto(dto.getTickets());
@@ -40,7 +40,7 @@ public class EventMapper {
         return event;
     }
 
-    // Обновление существующей сущности
+    // PATCH-подход: частичное обновление
     public Event updateEventInformation(Event eventToChange, EventDTO dto) {
         if (dto == null) return eventToChange;
 
@@ -51,9 +51,29 @@ public class EventMapper {
         if (dto.getEventDate() != null) eventToChange.setEventDate(dto.getEventDate());
 
         if (dto.getTickets() != null) {
-            List<Ticket> tickets = ticketMapper.mapTicketsListFromDto(dto.getTickets());
-            tickets.forEach(t -> t.setEvent(eventToChange));
-            eventToChange.setTickets(tickets);
+            // PATCH: обновляем существующие или добавляем новые тикеты
+            List<Ticket> updatedTickets = ticketMapper.mapTicketsListFromDto(dto.getTickets());
+            for (Ticket updated : updatedTickets) {
+                if (updated.getId() == null) {
+                    updated.setEvent(eventToChange);
+                    eventToChange.getTickets().add(updated);
+                } else {
+                    boolean found = false;
+                    for (int i = 0; i < eventToChange.getTickets().size(); i++) {
+                        Ticket current = eventToChange.getTickets().get(i);
+                        if (current.getId().equals(updated.getId())) {
+                            updated.setEvent(eventToChange);
+                            eventToChange.getTickets().set(i, updated);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        updated.setEvent(eventToChange);
+                        eventToChange.getTickets().add(updated);
+                    }
+                }
+            }
         }
 
         return eventToChange;
@@ -61,7 +81,7 @@ public class EventMapper {
 
     // Entity → DTO
     public EventDTO mapToDto(Event event) {
-        if (event == null) return null;
+        if (event == null) throw new IllegalArgumentException("Event entity cannot be null");
 
         return EventDTO.builder()
                 .id(event.getId())
@@ -69,7 +89,7 @@ public class EventMapper {
                 .description(event.getDescription())
                 .location(event.getLocation())
                 .imageURL(event.getImageURL())
-                .eventDate(event.getEventDate()) // LocalDateTime напрямую
+                .eventDate(event.getEventDate())
                 .tickets(event.getTickets() != null
                         ? ticketMapper.mapEntityListToDtoList(event.getTickets())
                         : List.of())
@@ -77,9 +97,10 @@ public class EventMapper {
     }
 
     public List<EventDTO> mapListToDtoList(List<Event> events) {
-        if (events == null || events.isEmpty()) return List.of();
-        return events.stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+        return events == null ? List.of() :
+                events.stream()
+                        .map(this::mapToDto)
+                        .filter(Objects::nonNull)
+                        .toList();
     }
 }

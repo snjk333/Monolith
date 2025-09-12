@@ -96,6 +96,7 @@ public class TicketServiceImpl implements TicketService {
             throw new ResourceAlreadyExistsException("Ticket with id " + dto.getId() + " already exists");
         }
         Ticket ticket = ticketMapper.mapToEntity(dto);
+        ticket.setEvent(eventService.findById(dto.getEventId()));
         Ticket saved = ticketRepository.saveAndFlush(ticket);
         log.info("Ticket created successfully with ID: {}", saved.getId());
         return ticketMapper.mapToDto(saved);
@@ -139,5 +140,12 @@ public class TicketServiceImpl implements TicketService {
         Ticket saved = ticketRepository.saveAndFlush(ticket);
         log.info("Ticket saved successfully with ID: {}", saved.getId());
         return saved;
+    }
+
+    @Override
+    public List<Ticket> findTickets(List<Ticket> tickets) {
+        return tickets;
+//        if (tickets != null) return tickets;
+//        else return //todo make new tickets
     }
 }

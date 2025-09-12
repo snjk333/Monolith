@@ -28,12 +28,14 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final BookingMapper bookingMapper;
+    private final BookingServiceImpl bookingServiceImpl;
 
-    public UserServiceImpl(AuthClientService authClientService, UserRepository userRepository, UserMapper userMapper, BookingMapper bookingMapper) {
+    public UserServiceImpl(AuthClientService authClientService, UserRepository userRepository, UserMapper userMapper, BookingMapper bookingMapper, BookingServiceImpl bookingServiceImpl) {
         this.authClientService = authClientService;
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.bookingMapper = bookingMapper;
+        this.bookingServiceImpl = bookingServiceImpl;
     }
 
     @Transactional(readOnly = true)

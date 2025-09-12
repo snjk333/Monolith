@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 public class UserMapper {
@@ -19,7 +20,7 @@ public class UserMapper {
 
     // Entity → DTO
     public UserDTO mapToDto(User user) {
-        if (user == null) return null;
+        if (user == null) throw new IllegalArgumentException("User entity cannot be null");
 
         List<BookingDTO> bookingsDto = user.getBookings() != null
                 ? bookingMapper.mapEntityListToDtoList(user.getBookings())
@@ -36,14 +37,14 @@ public class UserMapper {
 
     // DTO → Entity
     public User mapToEntity(UserDTO dto) {
-        if (dto == null) return null;
+        if (dto == null) throw new IllegalArgumentException("UserDTO cannot be null");
 
         User user = new User();
         user.setId(dto.getId());
         user.setUsername(dto.getUsername());
         user.setEmail(dto.getEmail());
         user.setRole(dto.getRole());
-        user.setBookings(new ArrayList<>()); // пустой список, позже маппится отдельно
+        user.setBookings(new ArrayList<>()); // bookings подгружаем отдельно через сервис
         return user;
     }
 
@@ -57,9 +58,10 @@ public class UserMapper {
 
     // Список сущностей → список DTO
     public List<UserDTO> mapListToDtoList(List<User> users) {
-        if (users == null || users.isEmpty()) return List.of();
-        return users.stream()
-                .map(this::mapToDto)
-                .toList();
+        return users == null ? List.of() :
+                users.stream()
+                        .map(this::mapToDto)
+                        .filter(Objects::nonNull)
+                        .toList();
     }
 }

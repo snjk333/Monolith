@@ -23,4 +23,6 @@ public interface TicketService {
     Ticket updateStatus(UUID ticketId, TICKET_STATUS status); // general
 
     Ticket save(Ticket ticket);
+
+    List<Ticket> findTickets(List<Ticket> tickets);
 }

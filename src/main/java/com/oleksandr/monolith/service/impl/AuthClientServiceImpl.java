@@ -1,11 +1,13 @@
 package com.oleksandr.monolith.service.impl;
 
 import com.oleksandr.monolith.dto.UserDTO;
+import com.oleksandr.monolith.exceptions.ResourceNotFoundException;
 import com.oleksandr.monolith.service.interfaces.AuthClientService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
@@ -29,30 +31,27 @@ public class AuthClientServiceImpl implements AuthClientService {
     @Override
     public UserDTO getUserById(UUID userId) {
         try {
-            // Build a WebClient instance with Auth MS base URL
             WebClient webClient = webClientBuilder
-                    .baseUrl("http://auth-service:8080/api/users") // <- Change to your Auth MS URL
+                    .baseUrl("http://auth-service:8080/api/users")
                     .build();
 
-            // Send synchronous GET request to Auth MS
-            return webClient
-                    .get()
-                    .uri("/{id}", userId) // Append userId to the URL path
+            return webClient.get()
+                    .uri("/{id}", userId)
                     .retrieve()
-                    .bodyToMono(UserDTO.class) // Convert JSON response to UserDTO
-                    .block(); // Block until the response is received (synchronous)
+                    .onStatus(status -> status.value() == 404,
+                            resp -> Mono.error(new ResourceNotFoundException("User not found in Auth service: " + userId)))
+                    .bodyToMono(UserDTO.class)
+                    .block();
 
         } catch (WebClientResponseException.NotFound e) {
-            // Auth MS responded with 404 → User not found
-            log.warn("User {} not found in Auth MS", userId);
-            return null;
-
+            throw new ResourceNotFoundException("User not found in Auth service: " + userId);
         } catch (Exception e) {
-            // Any other error: network issues, Auth MS unavailable, etc.
-            log.error("Failed to fetch user {} from Auth MS: {}", userId, e.getMessage());
-            return null;
+            log.error("Failed to fetch user {} from Auth MS: {}", userId, e.toString());
+            // Можно создать свою ошибку типа AuthServiceUnavailableException
+            throw new RuntimeException("Auth service unavailable or failed for user: " + userId, e);
         }
     }
+
 
     @Override
     public UserDTO updateUser(UserDTO userDto) {

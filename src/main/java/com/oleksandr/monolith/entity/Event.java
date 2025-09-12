@@ -28,8 +28,8 @@ public class Event {
     private LocalDateTime eventDate;
     private String imageURL;
 
-    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Ticket> tickets = new ArrayList<>();;
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Ticket> tickets = new ArrayList<>();
 
     @Version
     @Column(nullable = false)
