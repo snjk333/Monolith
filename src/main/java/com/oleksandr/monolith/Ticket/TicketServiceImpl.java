@@ -63,4 +63,33 @@ public class TicketServiceImpl implements TicketService {
     public List<Ticket> findTicketsByEventId(UUID eventId) {
         return ticketRepository.findAllByEventId(eventId);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Ticket findEntityById(UUID ticketId) {
+
+        log.info("Finding ticket entity by ID: {}", ticketId);
+
+        return ticketRepository.findById(ticketId)
+
+                .orElseThrow(() -> {
+
+                    log.warn("Ticket not found with ID: {}", ticketId);
+
+                    return new ResourceNotFoundException("Ticket not found: " + ticketId);
+
+                });
+
+    }
+
+    @Override
+
+    @Transactional
+    public Ticket save(Ticket ticket) {
+        log.info("Saving ticket entity ID: {}", ticket.getId());
+        Ticket saved = ticketRepository.saveAndFlush(ticket);
+        log.info("Ticket saved successfully with ID: {}", saved.getId());
+        return saved;
+
+    }
 }

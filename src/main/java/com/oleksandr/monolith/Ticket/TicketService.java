@@ -18,4 +18,8 @@ public interface TicketService {
 
     @Transactional(readOnly = true)
     List<Ticket> findTicketsByEventId(UUID eventId);
+
+    Ticket findEntityById(UUID id);
+
+    Ticket save(Ticket ticket);
 }
