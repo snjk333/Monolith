@@ -1,49 +1,33 @@
 package com.oleksandr.monolith.User;
 
-import com.oleksandr.monolith.Booking.BookingDTO;
-import com.oleksandr.monolith.Booking.BookingServiceImpl;
-import com.oleksandr.monolith.Booking.Booking;
 import com.oleksandr.monolith.common.exceptions.ResourceNotFoundException;
 import com.oleksandr.monolith.integration.auth.AuthClientService;
-import com.oleksandr.monolith.Booking.BookingMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class UserServiceImpl implements UserService {
 
-    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
-
-    private final AuthClientService authClientService;
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    private final BookingMapper bookingMapper;
-    private final BookingServiceImpl bookingServiceImpl;
+    private final AuthClientService authClientService;
 
-    public UserServiceImpl(AuthClientService authClientService, UserRepository userRepository, UserMapper userMapper, BookingMapper bookingMapper, BookingServiceImpl bookingServiceImpl) {
-        this.authClientService = authClientService;
+    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, AuthClientService authClientService) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
-        this.bookingMapper = bookingMapper;
-        this.bookingServiceImpl = bookingServiceImpl;
+        this.authClientService = authClientService;
     }
 
-    @Transactional(readOnly = true)
-    @Override
-    public List<BookingDTO> getUserBookings(UUID userId) {
-        log.info("Fetching bookings for user ID: {}", userId);
-        User user = getOrCreateUser(userId);
-        List<Booking> bookings = user.getBookings();
-        log.info("User ID {} has {} bookings", userId, bookings.size());
-        return bookingMapper.mapEntityListToDtoList(bookings);
-    }
-
+    /**
+     * Находит пользователя в локальной БД или создает его,
+     * получая данные из внешнего сервиса.
+     * Содержит надежную обработку гонки потоков (race condition).
+     */
     @Transactional
     @Override
     public User getOrCreateUser(UUID userId) {
@@ -61,28 +45,9 @@ public class UserServiceImpl implements UserService {
                 return userRepository.findById(userId)
                         .orElseThrow(() -> {
                             log.error("User not found after race condition for ID: {}", userId);
-                            return new ResourceNotFoundException("User not found after race condition");
+                            return new ResourceNotFoundException("User not found after race condition for ID: " + userId);
                         });
             }
         });
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public UserDTO getUserDto(UUID userId) {
-        log.info("Fetching UserDTO for user ID: {}", userId);
-        User user = getOrCreateUser(userId);
-        return userMapper.mapToDto(user);
-    }
-
-    @Transactional
-    @Override
-    public UserDTO updateUserInfo(UserDTO dto) {
-        log.info("Updating user info for ID: {}", dto.getId());
-        User userToChange = this.getOrCreateUser(dto.getId());
-        User updatedUser = userMapper.updateUserInformation(userToChange, dto);
-        User savedUser = userRepository.save(updatedUser);
-        log.info("User info updated successfully for ID: {}", savedUser.getId());
-        return userMapper.mapToDto(savedUser);
     }
 }

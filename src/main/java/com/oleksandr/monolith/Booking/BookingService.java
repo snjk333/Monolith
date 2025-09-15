@@ -1,16 +1,27 @@
 package com.oleksandr.monolith.Booking;
 
+import com.oleksandr.monolith.Ticket.Ticket;
+import com.oleksandr.monolith.User.User;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.UUID;
 
 public interface BookingService {
 
-    // Основное
-    BookingDTO createBooking(UUID userId, UUID ticketId);
-    List<BookingDTO> getBookingsByUser(UUID userId);
 
-    // Второстепенные
-    BookingDTO cancelBooking(UUID bookingId, UUID userId);
-    BookingDTO completeBooking(UUID bookingId, UUID userId);
-    boolean isTicketAvailable(UUID ticketId);
+    @Transactional
+    Booking createBooking(User user, Ticket ticket);
+
+    @Transactional
+    Booking cancelBooking(Booking booking);
+
+    @Transactional
+    Booking completeBooking(Booking booking);
+
+    @Transactional(readOnly = true)
+    Booking findById(UUID bookingId);
+
+    @Transactional(readOnly = true)
+    List<Booking> getBookingsByUser(UUID userId);
 }

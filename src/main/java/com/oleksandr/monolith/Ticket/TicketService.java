@@ -8,18 +8,17 @@ import java.util.UUID;
 public interface TicketService {
 
     @Transactional
-    Ticket createTicket(Ticket ticket);
+    Ticket reserveTicket(UUID ticketId);
 
     @Transactional
-    Ticket updateStatus(UUID ticketId, TICKET_STATUS status);
+    void markAvailable(Ticket ticket);
+
+    @Transactional
+    void markSold(Ticket ticket);
 
     @Transactional(readOnly = true)
     Ticket findById(UUID ticketId);
 
     @Transactional(readOnly = true)
-    List<Ticket> findTicketsByEventId(UUID eventId);
-
-    Ticket findEntityById(UUID id);
-
-    Ticket save(Ticket ticket);
+    boolean isTicketAvailable(UUID ticketId);
 }

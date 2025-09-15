@@ -1,95 +1,99 @@
 package com.oleksandr.monolith.Ticket;
 
 import com.oleksandr.monolith.common.exceptions.ConcurrentUpdateException;
-import com.oleksandr.monolith.common.exceptions.ResourceAlreadyExistsException;
 import com.oleksandr.monolith.common.exceptions.ResourceNotFoundException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.oleksandr.monolith.common.exceptions.TicketNotAvailableException;
+import jakarta.persistence.OptimisticLockException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class TicketServiceImpl implements TicketService {
 
-    private static final Logger log = LoggerFactory.getLogger(TicketServiceImpl.class);
-
     private final TicketRepository ticketRepository;
-    private final TicketMapper ticketMapper;
-
-    public TicketServiceImpl(TicketRepository ticketRepository, TicketMapper ticketMapper) {
+    public TicketServiceImpl(TicketRepository ticketRepository) {
         this.ticketRepository = ticketRepository;
-        this.ticketMapper = ticketMapper;
     }
 
+    /**
+     * Резервирует билет. Содержит всю логику проверки доступности и защиты от гонок.
+     */
     @Transactional
     @Override
-    public Ticket createTicket(Ticket ticket) {
-        if (ticket.getId() != null && ticketRepository.existsById(ticket.getId())) {
-            throw new ResourceAlreadyExistsException("Ticket with id " + ticket.getId() + " already exists");
+    public Ticket reserveTicket(UUID ticketId) {
+        log.info("Attempting to reserve ticketId={}", ticketId);
+        Ticket ticket = findById(ticketId);
+
+        if (ticket.getStatus() != TICKET_STATUS.AVAILABLE) {
+            log.warn("Ticket {} is not available. Current status: {}", ticketId, ticket.getStatus());
+            throw new TicketNotAvailableException("Ticket not available: " + ticketId);
         }
-        return ticketRepository.saveAndFlush(ticket);
+
+        try {
+            ticket.setStatus(TICKET_STATUS.RESERVED);
+            Ticket savedTicket = ticketRepository.saveAndFlush(ticket);
+            log.info("Ticket {} successfully reserved", ticketId);
+            return savedTicket;
+        } catch (OptimisticLockingFailureException | OptimisticLockException ole) {
+            log.warn("Optimistic locking conflict while reserving ticket: ticketId={}, message={}",
+                    ticketId, ole.getMessage());
+            throw new ConcurrentUpdateException("Ticket was reserved by another user", ole);
+        }
     }
 
+    /**
+     * Помечает билет как доступный.
+     */
     @Transactional
     @Override
-    public Ticket updateStatus(UUID ticketId, TICKET_STATUS status) {
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + ticketId));
-
-        if (ticket.getStatus() != status) {
-            ticket.setStatus(status);
-            try {
-                return ticketRepository.saveAndFlush(ticket);
-            } catch (OptimisticLockingFailureException ex) {
-                throw new ConcurrentUpdateException("Ticket " + ticketId + " updated concurrently", ex);
-            }
-        }
-        return ticket;
+    public void markAvailable(Ticket ticket) {
+        log.info("Marking ticket {} as AVAILABLE", ticket.getId());
+        ticket.setStatus(TICKET_STATUS.AVAILABLE);
+        ticketRepository.saveAndFlush(ticket);
     }
 
+    /**
+     * Помечает билет как проданный.
+     */
+    @Transactional
+    @Override
+    public void markSold(Ticket ticket) {
+        log.info("Marking ticket {} as SOLD", ticket.getId());
+        if (ticket.getStatus() == TICKET_STATUS.SOLD) {
+            log.warn("Ticket {} is already SOLD", ticket.getId());
+            throw new TicketNotAvailableException("Ticket already sold: " + ticket.getId());
+        }
+        ticket.setStatus(TICKET_STATUS.SOLD);
+        ticketRepository.saveAndFlush(ticket);
+    }
+
+    /**
+     * Находит сущность билета по ID.
+     */
     @Transactional(readOnly = true)
     @Override
     public Ticket findById(UUID ticketId) {
         return ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + ticketId));
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public List<Ticket> findTicketsByEventId(UUID eventId) {
-        return ticketRepository.findAllByEventId(eventId);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Ticket findEntityById(UUID ticketId) {
-
-        log.info("Finding ticket entity by ID: {}", ticketId);
-
-        return ticketRepository.findById(ticketId)
-
                 .orElseThrow(() -> {
-
                     log.warn("Ticket not found with ID: {}", ticketId);
-
                     return new ResourceNotFoundException("Ticket not found: " + ticketId);
-
                 });
-
     }
 
+    /**
+     * Проверяет, доступен ли билет.
+     */
+    @Transactional(readOnly = true)
     @Override
-
-    @Transactional
-    public Ticket save(Ticket ticket) {
-        log.info("Saving ticket entity ID: {}", ticket.getId());
-        Ticket saved = ticketRepository.saveAndFlush(ticket);
-        log.info("Ticket saved successfully with ID: {}", saved.getId());
-        return saved;
-
+    public boolean isTicketAvailable(UUID ticketId) {
+        Ticket ticket = findById(ticketId);
+        boolean available = ticket.getStatus() == TICKET_STATUS.AVAILABLE;
+        log.debug("Ticket {} availability: {}", ticketId, available);
+        return available;
     }
 }
