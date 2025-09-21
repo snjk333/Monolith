@@ -1,5 +1,7 @@
 package com.oleksandr.monolith.Event.util;
 
+import com.oleksandr.monolith.Event.DTO.Response.EventDetailsDTO;
+import com.oleksandr.monolith.Event.DTO.Response.EventSummaryDTO;
 import com.oleksandr.monolith.Event.EntityRepo.Event;
 import com.oleksandr.monolith.Event.DTO.EventDTO;
 import com.oleksandr.monolith.Ticket.EntityRepo.Ticket;
@@ -103,5 +105,38 @@ public class EventMapper {
                         .map(this::mapToDto)
                         .filter(Objects::nonNull)
                         .toList();
+    }
+
+    public List<EventSummaryDTO> mapListToSummaryList(List<Event> allEvents) {
+        return allEvents == null ? List.of() :
+                allEvents.stream()
+                        .map(this::mapToSummaryDto)
+                        .filter(Objects::nonNull)
+                        .toList();
+    }
+
+    // Entity → DTO
+    public EventSummaryDTO mapToSummaryDto(Event event) {
+        if (event == null) throw new IllegalArgumentException("Event entity cannot be null");
+
+        return EventSummaryDTO.builder()
+                .id(event.getId())
+                .name(event.getName())
+                .imageURL(event.getImageURL())
+                .eventDate(event.getEventDate())
+                .build();
+    }
+
+    public EventDetailsDTO mapEventToDetailsDto(Event event) {
+        if (event == null) throw new IllegalArgumentException("Event entity cannot be null");
+
+        return EventDetailsDTO.builder()
+                .id(event.getId())
+                .name(event.getName())
+                .description(event.getDescription())
+                .location(event.getLocation())
+                .imageURL(event.getImageURL())
+                .eventDate(event.getEventDate())
+                .build();
     }
 }

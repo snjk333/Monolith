@@ -1,5 +1,7 @@
 package com.oleksandr.monolith.Event.Service;
 
+import com.oleksandr.monolith.Event.DTO.Response.EventDetailsDTO;
+import com.oleksandr.monolith.Event.DTO.Response.EventSummaryDTO;
 import com.oleksandr.monolith.Event.EntityRepo.Event;
 import com.oleksandr.monolith.Event.DTO.EventDTO;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,9 +11,13 @@ import java.util.UUID;
 
 public interface EventService {
 
-    List<EventDTO> getAllEvents();
-    List<EventDTO> getUpcomingEvents();
+    List<Event> getAllEvents();
+    List<Event> getUpcomingEvents();
     Event findById(UUID eventID);
     @Transactional
     Event saveEventEntity(Event event);
+
+    List<EventSummaryDTO> getAllEventsSummary();
+
+    EventDetailsDTO getEventDetails(UUID id);
 }

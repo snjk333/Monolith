@@ -84,4 +84,11 @@ public class EventTicketCoordinator {
         Event savedEvent = eventService.saveEventEntity(eventEntity);
         return eventMapper.mapToDto(savedEvent);
     }
+
+    public List<TicketDTO> getTicketsByEventId(UUID id) {
+        Event event = eventService.findById(id);
+        if (event == null) return new ArrayList<>();
+        List<Ticket> tickets = event.getTickets();
+        return tickets.stream().map(ticketMapper::mapToDto).collect(Collectors.toList());
+    }
 }

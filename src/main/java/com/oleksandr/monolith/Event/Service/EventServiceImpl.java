@@ -1,9 +1,11 @@
 package com.oleksandr.monolith.Event.Service;
 
+import com.oleksandr.monolith.Event.DTO.Response.EventDetailsDTO;
+import com.oleksandr.monolith.Event.DTO.Response.EventSummaryDTO;
 import com.oleksandr.monolith.Event.EntityRepo.Event;
-import com.oleksandr.monolith.Event.DTO.EventDTO;
 import com.oleksandr.monolith.Event.util.EventMapper;
 import com.oleksandr.monolith.Event.EntityRepo.EventRepository;
+import com.oleksandr.monolith.Ticket.DTO.TicketDTO;
 import com.oleksandr.monolith.common.exceptions.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,15 +34,29 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<EventDTO> getAllEvents() {
+    public List<Event> getAllEvents() {
         List<Event> events = eventRepository.findAll();
-        return eventMapper.mapListToDtoList(events);
+        return events;
     }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<EventSummaryDTO> getAllEventsSummary() {
+        return eventMapper.mapListToSummaryList(this.getAllEvents());
+    }
+
     @Override
     @Transactional(readOnly = true)
-    public List<EventDTO> getUpcomingEvents() {
+    public EventDetailsDTO getEventDetails(UUID id) {
+        Event event = findById(id);
+        return eventMapper.mapEventToDetailsDto(event);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Event> getUpcomingEvents() {
         List<Event> events = eventRepository.findByEventDateAfter(LocalDateTime.now());
-        return eventMapper.mapListToDtoList(events);
+        return events;
     }
 
     @Transactional
@@ -48,4 +64,6 @@ public class EventServiceImpl implements EventService {
     public Event saveEventEntity(Event event) {
         return eventRepository.saveAndFlush(event);
     }
+
+
 }
