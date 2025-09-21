@@ -12,4 +12,5 @@ public class UsersController {
 /*
 GET /users/{id} → получить профиль пользователя
 PATCH /users/{id} → обновить профиль
+GET /users/{id}/bookings → список бронирований пользователя
  */
