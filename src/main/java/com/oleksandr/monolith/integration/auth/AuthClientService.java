@@ -1,6 +1,6 @@
 package com.oleksandr.monolith.integration.auth;
 
-import com.oleksandr.monolith.User.UserDTO;
+import com.oleksandr.monolith.User.DTO.UserDTO;
 
 import java.util.UUID;
 

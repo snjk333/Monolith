@@ -1,7 +1,7 @@
 package com.oleksandr.monolith.rest;
 
-import com.oleksandr.monolith.Event.EventDTO;
-import com.oleksandr.monolith.Ticket.TicketDTO;
+import com.oleksandr.monolith.Event.DTO.EventDTO;
+import com.oleksandr.monolith.Ticket.DTO.TicketDTO;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,18 +19,13 @@ public class EventsController {
     }
 
     @GetMapping("/{id}")
-    public EventDTO getEventByUUID(
-            @PathVariable("id") UUID id,
-            @RequestParam(value = "includeTickets", defaultValue = "false") boolean includeTickets
-    ) {
+    public EventDTO getEventDetails( @PathVariable("id") UUID id) {
         return null;
         //todo
     }
 
     @GetMapping("/{id}/tickets")
-    public List<TicketDTO> getTicketsByEvent(
-            @PathVariable("id") UUID id
-    ) {
+    public List<TicketDTO> getTicketsByEvent( @PathVariable("id") UUID id ) {
         return null;
         //todo
     }

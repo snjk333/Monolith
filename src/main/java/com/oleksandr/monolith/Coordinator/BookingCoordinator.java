@@ -1,10 +1,10 @@
 package com.oleksandr.monolith.Coordinator;
 
-import com.oleksandr.monolith.Booking.BookingDTO;
-import com.oleksandr.monolith.Booking.BookingMapper;
-import com.oleksandr.monolith.Booking.BookingService;
-import com.oleksandr.monolith.Ticket.TicketService;
-import com.oleksandr.monolith.User.UserService;
+import com.oleksandr.monolith.Booking.DTO.BookingDTO;
+import com.oleksandr.monolith.Booking.util.BookingMapper;
+import com.oleksandr.monolith.Booking.Service.BookingService;
+import com.oleksandr.monolith.Ticket.Service.TicketService;
+import com.oleksandr.monolith.User.Service.UserService;
 import com.oleksandr.monolith.common.exceptions.BookingAccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

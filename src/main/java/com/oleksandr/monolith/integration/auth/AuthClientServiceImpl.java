@@ -1,6 +1,6 @@
 package com.oleksandr.monolith.integration.auth;
 
-import com.oleksandr.monolith.User.UserDTO;
+import com.oleksandr.monolith.User.DTO.UserDTO;
 import com.oleksandr.monolith.common.exceptions.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
