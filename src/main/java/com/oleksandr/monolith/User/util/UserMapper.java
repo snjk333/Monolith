@@ -3,12 +3,14 @@ package com.oleksandr.monolith.User.util;
 import com.oleksandr.monolith.Booking.DTO.BookingDTO;
 import com.oleksandr.monolith.Booking.util.BookingMapper;
 import com.oleksandr.monolith.User.DTO.UserDTO;
+import com.oleksandr.monolith.User.DTO.UserSummaryDTO;
 import com.oleksandr.monolith.User.EntityRepo.User;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @Component
 public class UserMapper {
@@ -64,5 +66,14 @@ public class UserMapper {
                         .map(this::mapToDto)
                         .filter(Objects::nonNull)
                         .toList();
+    }
+
+    public UserSummaryDTO mapToSummaryDto(User user) {
+        return UserSummaryDTO
+                .builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .build();
     }
 }
