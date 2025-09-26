@@ -3,6 +3,7 @@ package com.oleksandr.monolith.Coordinator;
 import com.oleksandr.monolith.Booking.DTO.BookingDTO;
 import com.oleksandr.monolith.Booking.DTO.BookingDetailsDTO;
 import com.oleksandr.monolith.Booking.DTO.BookingSummaryDTO;
+import com.oleksandr.monolith.Booking.EntityRepo.Booking;
 import com.oleksandr.monolith.Booking.util.BookingMapper;
 import com.oleksandr.monolith.Booking.Service.BookingService;
 import com.oleksandr.monolith.Ticket.DTO.TicketDTO;
@@ -15,6 +16,7 @@ import com.oleksandr.monolith.common.exceptions.BookingAccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -88,5 +90,13 @@ public class BookingCoordinator {
                 .createdAt(booking.getCreatedAt())
                 .version(booking.getVersion())
                 .build();
+    }
+
+
+    public List<BookingSummaryDTO> getUserBookings(UUID userID) {
+        var user = userService.getOrCreateUser(userID);
+        List<Booking> bookingsList = user.getBookings();
+
+        return bookingMapper.mapListToSummaryListDto(bookingsList);
     }
 }

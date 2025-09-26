@@ -1,6 +1,8 @@
 package com.oleksandr.monolith.User.Service;
 
 import com.oleksandr.monolith.User.DTO.UserDTO;
+import com.oleksandr.monolith.User.DTO.UserSummaryDTO;
+import com.oleksandr.monolith.User.DTO.UserUpdateRequestDTO;
 import com.oleksandr.monolith.User.EntityRepo.User;
 import com.oleksandr.monolith.User.EntityRepo.UserRepository;
 import com.oleksandr.monolith.User.util.UserMapper;
@@ -54,4 +56,29 @@ public class UserServiceImpl implements UserService {
             }
         });
     }
+
+    @Transactional
+    @Override
+    public UserDTO getUserProfile(UUID id) {
+        User user = getOrCreateUser(id);
+        return userMapper.mapToDto(user);
+    }
+
+    @Override
+    public UserSummaryDTO updateUserProfile(UUID id, UserUpdateRequestDTO request) {
+        User user = getOrCreateUser(id);
+        updateUserFields(user, request);
+        authClientService.updateUser(userMapper.mapToDto(user));
+        return userMapper.mapToSummaryDto(user);
+    }
+
+    private void updateUserFields(User user, UserUpdateRequestDTO request) {
+        if(request.getEmail() != null) {
+            user.setEmail(request.getEmail());
+        }
+        if (request.getUsername() != null) {
+            user.setUsername(request.getUsername());
+        }
+    }
+
 }

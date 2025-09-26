@@ -62,4 +62,12 @@ public class BookingMapper {
                 .createdAt(booking.getCreatedAt())
                 .build();
     }
+
+    public List<BookingSummaryDTO> mapListToSummaryListDto(List<Booking> bookingsList) {
+        return bookingsList == null ? List.of() :
+                bookingsList.stream()
+                        .map(this::mapToSummaryDto)
+                        .filter(Objects::nonNull)
+                        .toList();
+    }
 }
