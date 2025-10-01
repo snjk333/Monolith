@@ -18,7 +18,7 @@ import java.util.UUID;
 public class Ticket {
 
     @Id
-    @GeneratedValue(generator = "UUID")
+    //@GeneratedValue(generator = "UUID")
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)

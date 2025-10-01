@@ -5,6 +5,7 @@ import com.oleksandr.monolith.Ticket.EntityRepo.TICKET_STATUS;
 import com.oleksandr.monolith.Ticket.EntityRepo.Ticket;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -14,22 +15,23 @@ public class TicketMapper {
     // DTO → Entity
     public Ticket mapToEntity(TicketDTO dto) {
         if (dto == null) throw new IllegalArgumentException("TicketDTO cannot be null");
+
         Ticket ticket = new Ticket();
         ticket.setId(dto.getId());
         ticket.setType(dto.getType());
         ticket.setPrice(dto.getPrice());
         ticket.setStatus(dto.getStatus() != null ? dto.getStatus() : TICKET_STATUS.AVAILABLE);
-
-        // eventId нужно установить в сервисе через репозиторий Event, если dto.getEventId() != null
         return ticket;
     }
 
     public List<Ticket> mapTicketsListFromDto(List<TicketDTO> dtos) {
-        return dtos == null ? List.of() :
-                dtos.stream()
-                        .map(this::mapToEntity)
-                        .filter(Objects::nonNull)
-                        .toList();
+        if (dtos == null) return List.of();
+        List<Ticket> out = new ArrayList<>();
+        for (var d : dtos) {
+            if (d == null) continue;
+            out.add(mapToEntity(d));
+        }
+        return out;
     }
 
     // Entity → DTO
@@ -38,10 +40,10 @@ public class TicketMapper {
 
         return TicketDTO.builder()
                 .id(ticket.getId())
+                .eventId(ticket.getEvent() != null ? ticket.getEvent().getId() : null)
                 .type(ticket.getType())
                 .price(ticket.getPrice())
                 .status(ticket.getStatus())
-                .eventId(ticket.getEvent() != null ? ticket.getEvent().getId() : null)
                 .build();
     }
 
@@ -51,5 +53,12 @@ public class TicketMapper {
                         .map(this::mapToDto)
                         .filter(Objects::nonNull)
                         .toList();
+    }
+
+    public void updateEntityFromDto(Ticket entity, TicketDTO dto) {
+        if (entity == null || dto == null) return;
+        entity.setPrice(dto.getPrice());
+        entity.setType(dto.getType());
+        entity.setStatus(dto.getStatus() != null ? dto.getStatus() : entity.getStatus());
     }
 }

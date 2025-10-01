@@ -19,7 +19,7 @@ import java.util.UUID;
 public class Event {
 
     @Id
-    @GeneratedValue(generator = "UUID")
+    //@GeneratedValue(generator = "UUID")
     private UUID id;
 
     private String name;
