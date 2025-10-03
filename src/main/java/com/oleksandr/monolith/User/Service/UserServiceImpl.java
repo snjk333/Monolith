@@ -1,5 +1,6 @@
 package com.oleksandr.monolith.User.Service;
 
+import com.oleksandr.monolith.User.DTO.AuthUserDTO;
 import com.oleksandr.monolith.User.DTO.UserDTO;
 import com.oleksandr.monolith.User.DTO.UserSummaryDTO;
 import com.oleksandr.monolith.User.DTO.UserUpdateRequestDTO;
@@ -40,8 +41,8 @@ public class UserServiceImpl implements UserService {
         log.info("Looking for user with ID: {}", userId);
         return userRepository.findById(userId).orElseGet(() -> {
             log.info("User not found locally, fetching from Auth service: {}", userId);
-            UserDTO userDTO = authClientService.getUserById(userId);
-            User user = userMapper.mapToEntity(userDTO);
+            AuthUserDTO userDTO = authClientService.getUserById(userId);
+            User user = userMapper.mapToEntityFromAuth(userDTO);
             try {
                 User savedUser = userRepository.saveAndFlush(user);
                 log.info("User created locally with ID: {}", savedUser.getId());
@@ -68,7 +69,7 @@ public class UserServiceImpl implements UserService {
     public UserSummaryDTO updateUserProfile(UUID id, UserUpdateRequestDTO request) {
         User user = getOrCreateUser(id);
         updateUserFields(user, request);
-        authClientService.updateUser(userMapper.mapToDto(user));
+        authClientService.updateUser(userMapper.mapToAuthDto(user));
         return userMapper.mapToSummaryDto(user);
     }
 

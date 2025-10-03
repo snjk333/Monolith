@@ -2,6 +2,7 @@ package com.oleksandr.monolith.User.util;
 
 import com.oleksandr.monolith.Booking.DTO.BookingDTO;
 import com.oleksandr.monolith.Booking.util.BookingMapper;
+import com.oleksandr.monolith.User.DTO.AuthUserDTO;
 import com.oleksandr.monolith.User.DTO.UserDTO;
 import com.oleksandr.monolith.User.DTO.UserSummaryDTO;
 import com.oleksandr.monolith.User.EntityRepo.User;
@@ -74,6 +75,29 @@ public class UserMapper {
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
+                .build();
+    }
+
+    public User mapToEntityFromAuth(AuthUserDTO dto) {
+        if (dto == null) throw new IllegalArgumentException("AuthUserDTO cannot be null");
+
+        User user = new User();
+        user.setId(dto.getId());
+        user.setUsername(dto.getUsername());
+        user.setEmail(dto.getEmail());
+        user.setRole(dto.getRole());
+        user.setBookings(new ArrayList<>()); // bookings подгружаем отдельно через сервис
+        return user;
+    }
+
+    public AuthUserDTO mapToAuthDto(User user) {
+        if (user == null) throw new IllegalArgumentException("User entity cannot be null");
+
+        return AuthUserDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .role(user.getRole())
                 .build();
     }
 }

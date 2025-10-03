@@ -1,11 +1,12 @@
 package com.oleksandr.monolith.integration.auth;
 
+import com.oleksandr.monolith.User.DTO.AuthUserDTO;
 import com.oleksandr.monolith.User.DTO.UserDTO;
 
 import java.util.UUID;
 
 public interface AuthClientService {
-    UserDTO getUserById(UUID userId);
+    AuthUserDTO getUserById(UUID userId);
 
-    UserDTO updateUser(UserDTO userDto);
+    AuthUserDTO updateUser(AuthUserDTO userDto);
 }

@@ -1,6 +1,6 @@
 package com.oleksandr.monolith.integration.auth;
 
-import com.oleksandr.monolith.User.DTO.UserDTO;
+import com.oleksandr.monolith.User.DTO.AuthUserDTO;
 import com.oleksandr.monolith.common.exceptions.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,14 +24,14 @@ public class AuthClientServiceImpl implements AuthClientService {
 
     private WebClient authClient() {
         return webClientBuilder
-                .baseUrl("http://auth-service:8080/api/users")
+                .baseUrl("http://localhost:8080/api/users")
                 .build();
     }
     @Override
-    public UserDTO getUserById(UUID userId) {
+    public AuthUserDTO getUserById(UUID userId) {
         try {
             WebClient webClient = webClientBuilder
-                    .baseUrl("http://auth-service:8080/api/users")
+                    .baseUrl("http://localhost:8080/api/users")
                     .build();
 
             return webClient.get()
@@ -39,7 +39,7 @@ public class AuthClientServiceImpl implements AuthClientService {
                     .retrieve()
                     .onStatus(status -> status.value() == 404,
                             resp -> Mono.error(new ResourceNotFoundException("User not found in Auth service: " + userId)))
-                    .bodyToMono(UserDTO.class)
+                    .bodyToMono(AuthUserDTO.class)
                     .block();
 
         } catch (WebClientResponseException.NotFound e) {
@@ -53,10 +53,10 @@ public class AuthClientServiceImpl implements AuthClientService {
 
 
     @Override
-    public UserDTO updateUser(UserDTO userDto) {
+    public AuthUserDTO updateUser(AuthUserDTO userDto) {
         try {
             WebClient webClient = webClientBuilder
-                    .baseUrl("http://auth-service:8080/api/users")
+                    .baseUrl("http://localhost:8080/api/users")
                     .build();
 
             return webClient
@@ -64,7 +64,7 @@ public class AuthClientServiceImpl implements AuthClientService {
                     .uri("/{id}", userDto.getId()) // PATCH /api/users/{id}
                     .bodyValue(userDto)            // Send JSON body
                     .retrieve()
-                    .bodyToMono(UserDTO.class)     // Expect updated UserDTO
+                    .bodyToMono(AuthUserDTO.class)     // Expect updated UserDTO
                     .block();                      // Sync call for monolith
 
         } catch (WebClientResponseException.NotFound e) {
