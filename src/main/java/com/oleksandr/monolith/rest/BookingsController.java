@@ -14,6 +14,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/bookings")
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class BookingsController {
 
     private final BookingCoordinator bookingCoordinator;
