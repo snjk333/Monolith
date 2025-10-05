@@ -84,6 +84,7 @@ public class BookingCoordinator {
 
         return BookingDetailsDTO
                 .builder()
+                .id(booking.getId())
                 .user(userSummaryDTO)
                 .ticket(ticketDTO)
                 .status(booking.getStatus())
