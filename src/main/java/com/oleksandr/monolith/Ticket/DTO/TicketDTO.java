@@ -25,6 +25,8 @@ public class TicketDTO {
     @Min(0)
     private double price;
 
+    private String place;
+
     @NotNull
     private TICKET_STATUS status;
 }

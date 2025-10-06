@@ -20,6 +20,7 @@ public class TicketMapper {
         ticket.setId(dto.getId());
         ticket.setType(dto.getType());
         ticket.setPrice(dto.getPrice());
+        ticket.setPlace(dto.getPlace());
         ticket.setStatus(dto.getStatus() != null ? dto.getStatus() : TICKET_STATUS.AVAILABLE);
         return ticket;
     }
@@ -43,6 +44,7 @@ public class TicketMapper {
                 .eventId(ticket.getEvent() != null ? ticket.getEvent().getId() : null)
                 .type(ticket.getType())
                 .price(ticket.getPrice())
+                .place(ticket.getPlace())
                 .status(ticket.getStatus())
                 .build();
     }
@@ -58,6 +60,7 @@ public class TicketMapper {
     public void updateEntityFromDto(Ticket entity, TicketDTO dto) {
         if (entity == null || dto == null) return;
         entity.setPrice(dto.getPrice());
+        entity.setPlace(dto.getPlace());
         entity.setType(dto.getType());
         entity.setStatus(dto.getStatus() != null ? dto.getStatus() : entity.getStatus());
     }

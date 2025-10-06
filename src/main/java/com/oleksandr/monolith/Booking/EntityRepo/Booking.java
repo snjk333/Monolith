@@ -9,8 +9,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "bookings",
-        uniqueConstraints = @UniqueConstraint(name = "uk_bookings_ticket", columnNames = {"ticket_id"}))
+@Table(name = "bookings")
 @Getter
 @Setter
 @NoArgsConstructor

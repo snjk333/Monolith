@@ -16,6 +16,10 @@ public class EventSummaryDTO {
 
     private String name;
 
+    private String description;
+
+    private String location;
+
     private String imageURL;
 
     private LocalDateTime eventDate;

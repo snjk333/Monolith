@@ -128,6 +128,8 @@ public class EventMapper {
         return EventSummaryDTO.builder()
                 .id(event.getId())
                 .name(event.getName())
+                .description(event.getDescription())
+                .location(event.getLocation())
                 .imageURL(event.getImageURL())
                 .eventDate(event.getEventDate())
                 .build();

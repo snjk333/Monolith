@@ -28,6 +28,8 @@ public class Ticket {
     private String type;
     private double price;
 
+    private String place;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TICKET_STATUS status;

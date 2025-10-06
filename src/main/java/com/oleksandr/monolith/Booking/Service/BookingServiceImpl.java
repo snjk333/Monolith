@@ -32,11 +32,12 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Booking createBooking(User user, Ticket ticket) {
         log.info("Creating booking entity for userId={} and ticketId={}", user.getId(), ticket.getId());
-        // Проверка на существующее бронирование
-        bookingRepository.findByUserIdAndTicketId(user.getId(), ticket.getId())
+        // Проверка на существующее активное бронирование для этого билета
+        bookingRepository.findActiveBookingByTicketId(ticket.getId())
                 .ifPresent(b -> {
-                    log.warn("Booking conflict detected: userId={}, ticketId={}", user.getId(), ticket.getId());
-                    throw new BookingConflictException("Booking already exists for ticket: " + ticket.getId());
+                    log.warn("Active booking conflict detected for ticket: ticketId={}, existingBookingId={}, existingUserId={}, status={}", 
+                            ticket.getId(), b.getId(), b.getUser().getId(), b.getStatus());
+                    throw new BookingConflictException("Ticket is already booked by another user: " + ticket.getId());
                 });
 
         Booking booking = new Booking();
