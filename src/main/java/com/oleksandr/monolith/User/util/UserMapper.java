@@ -4,8 +4,11 @@ import com.oleksandr.monolith.Booking.DTO.BookingDTO;
 import com.oleksandr.monolith.Booking.util.BookingMapper;
 import com.oleksandr.monolith.User.DTO.AuthUserDTO;
 import com.oleksandr.monolith.User.DTO.UserDTO;
+import com.oleksandr.monolith.User.DTO.UserProfileResponseDTO;
 import com.oleksandr.monolith.User.DTO.UserSummaryDTO;
 import com.oleksandr.monolith.User.EntityRepo.User;
+import com.oleksandr.monolith.Wallet.EntityRepo.Wallet;
+import com.oleksandr.monolith.Wallet.util.WalletMapper;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -18,8 +21,11 @@ public class UserMapper {
 
     private final BookingMapper bookingMapper;
 
-    public UserMapper(BookingMapper bookingMapper) {
+    private final WalletMapper walletMapper;
+
+    public UserMapper(BookingMapper bookingMapper, WalletMapper walletMapper) {
         this.bookingMapper = bookingMapper;
+        this.walletMapper = walletMapper;
     }
 
     // Entity → DTO
@@ -48,11 +54,11 @@ public class UserMapper {
         user.setUsername(dto.getUsername());
         user.setEmail(dto.getEmail());
         user.setRole(dto.getRole());
-        user.setBookings(new ArrayList<>()); // bookings подгружаем отдельно через сервис
+        user.setBookings(new ArrayList<>());
+        user.setWallet(new Wallet());
         return user;
     }
 
-    // Обновление существующего пользователя
     public User updateUserInformation(User user, UserDTO dto) {
         if (dto.getUsername() != null) user.setUsername(dto.getUsername());
         if (dto.getEmail() != null) user.setEmail(dto.getEmail());
@@ -86,7 +92,8 @@ public class UserMapper {
         user.setUsername(dto.getUsername());
         user.setEmail(dto.getEmail());
         user.setRole(dto.getRole());
-        user.setBookings(new ArrayList<>()); // bookings подгружаем отдельно через сервис
+        user.setBookings(new ArrayList<>());
+        user.setWallet(new Wallet());
         return user;
     }
 
@@ -98,6 +105,18 @@ public class UserMapper {
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .role(user.getRole())
+                .build();
+    }
+
+    public UserProfileResponseDTO mapProfileResponseDTO(User user) {
+        if (user == null) throw new IllegalArgumentException("User entity cannot be null");
+
+        return UserProfileResponseDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .walletDTO(walletMapper.mapToDto(user.getWallet()))
                 .build();
     }
 }
