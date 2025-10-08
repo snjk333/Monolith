@@ -6,6 +6,8 @@ import com.oleksandr.monolith.User.DTO.UserProfileResponseDTO;
 import com.oleksandr.monolith.User.DTO.UserSummaryDTO;
 import com.oleksandr.monolith.User.DTO.UserUpdateRequestDTO;
 import com.oleksandr.monolith.User.Service.UserService;
+import com.oleksandr.monolith.Wallet.DTO.DepositRequestDTO;
+import com.oleksandr.monolith.Wallet.DTO.WalletDTO;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -46,6 +48,10 @@ public class UsersController {
         return bookingCoordinator.getUserBookings(id);
     }
 
+    @PostMapping("/{id}/deposit")
+    public WalletDTO userDeposit(@PathVariable UUID id,@RequestParam DepositRequestDTO payment) {
+        return userService.Deposit(id, payment);
+    }
 
 
 
