@@ -7,15 +7,19 @@ import com.oleksandr.monolith.Booking.EntityRepo.Booking;
 import com.oleksandr.monolith.Booking.util.BookingMapper;
 import com.oleksandr.monolith.Booking.Service.BookingService;
 import com.oleksandr.monolith.Ticket.DTO.TicketDTO;
+import com.oleksandr.monolith.Ticket.EntityRepo.TICKET_STATUS;
 import com.oleksandr.monolith.Ticket.Service.TicketService;
 import com.oleksandr.monolith.Ticket.util.TicketMapper;
 import com.oleksandr.monolith.User.DTO.UserSummaryDTO;
+import com.oleksandr.monolith.User.EntityRepo.User;
 import com.oleksandr.monolith.User.Service.UserService;
 import com.oleksandr.monolith.User.util.UserMapper;
+import com.oleksandr.monolith.Wallet.EntityRepo.Wallet;
 import com.oleksandr.monolith.common.exceptions.BookingAccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -52,6 +56,10 @@ public class BookingCoordinator {
     public BookingSummaryDTO cancelBooking(UUID bookingId, UUID userId) {
         var booking = bookingService.findById(bookingId);
 
+        if(!booking.getTicket().getStatus().equals(TICKET_STATUS.RESERVED)){
+            throw new BookingAccessDeniedException("You can't cancel reserved ticket");
+        }
+
         if (!booking.getUser().getId().equals(userId))
             throw new BookingAccessDeniedException("User id its not equals to booking's user id");
 
@@ -64,11 +72,21 @@ public class BookingCoordinator {
 
     @Transactional
     public BookingSummaryDTO completeBooking(UUID bookingId, UUID userId) {
-        var booking = bookingService.findById(bookingId);
 
+        var booking = bookingService.findById(bookingId);
         if (!booking.getUser().getId().equals(userId))
             throw new BookingAccessDeniedException("User id its not equals to booking's user id");
 
+        User user = booking.getUser();
+        Wallet wallet = user.getWallet();
+        BigDecimal ticketPrice = BigDecimal.valueOf(booking.getTicket().getPrice());
+
+        if (wallet.getBalance().compareTo(ticketPrice) < 0) {
+            throw new BookingAccessDeniedException("Don't have enough money. Ticket Price: " + ticketPrice);
+        }
+
+        BigDecimal newBalance = wallet.getBalance().subtract(ticketPrice);
+        wallet.setBalance(newBalance);
         ticketService.markSold(booking.getTicket());
         var completed = bookingService.completeBooking(booking);
 
