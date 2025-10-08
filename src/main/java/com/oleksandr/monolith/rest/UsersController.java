@@ -49,7 +49,7 @@ public class UsersController {
     }
 
     @PostMapping("/{id}/deposit")
-    public WalletDTO userDeposit(@PathVariable UUID id,@RequestParam DepositRequestDTO payment) {
+    public WalletDTO userDeposit(@PathVariable UUID id, @RequestBody DepositRequestDTO payment) {
         return userService.Deposit(id, payment);
     }
 

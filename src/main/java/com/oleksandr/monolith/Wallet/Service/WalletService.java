@@ -8,4 +8,5 @@ public interface WalletService {
 
     WalletDTO processDeposit(Wallet userWallet, DepositRequestDTO paymentRequestDTO);
 
+    Wallet createEmptyWallet();
 }

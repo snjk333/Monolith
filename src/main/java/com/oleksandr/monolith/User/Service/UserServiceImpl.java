@@ -44,6 +44,11 @@ public class UserServiceImpl implements UserService {
             User user = userMapper.mapToEntityFromAuth(userDTO);
             try {
                 User savedUser = userRepository.saveAndFlush(user);
+                Wallet wallet = walletService.createEmptyWallet();
+
+                wallet.setUser(savedUser);
+                user.setWallet(wallet);
+
                 log.info("User created locally with ID: {}", savedUser.getId());
                 return savedUser;
             } catch (DataIntegrityViolationException e) {

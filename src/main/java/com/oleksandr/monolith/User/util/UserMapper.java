@@ -93,7 +93,6 @@ public class UserMapper {
         user.setEmail(dto.getEmail());
         user.setRole(dto.getRole());
         user.setBookings(new ArrayList<>());
-        user.setWallet(new Wallet());
         return user;
     }
 
