@@ -1,6 +1,7 @@
 package com.oleksandr.monolith.User.EntityRepo;
 
 import com.oleksandr.monolith.Booking.EntityRepo.Booking;
+import com.oleksandr.monolith.Wallet.EntityRepo.Wallet;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,4 +29,7 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Booking> bookings;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Wallet wallet;
 }
