@@ -61,6 +61,7 @@ public class BookingCoordinator {
         return bookingMapper.mapToSummaryDto(cancelled);
     }
 
+
     @Transactional
     public BookingSummaryDTO completeBooking(UUID bookingId, UUID userId) {
         var booking = bookingService.findById(bookingId);
