@@ -56,8 +56,8 @@ public class BookingCoordinator {
     public BookingSummaryDTO cancelBooking(UUID bookingId, UUID userId) {
         var booking = bookingService.findById(bookingId);
 
-        if(!booking.getTicket().getStatus().equals(TICKET_STATUS.RESERVED)){
-            throw new BookingAccessDeniedException("You can't cancel reserved ticket");
+        if(booking.getTicket().getStatus().equals(TICKET_STATUS.SOLD)){
+            throw new BookingAccessDeniedException("You can't cancel sold ticket");
         }
 
         if (!booking.getUser().getId().equals(userId))
