@@ -7,6 +7,7 @@ import com.oleksandr.monolith.Booking.EntityRepo.Booking;
 import com.oleksandr.monolith.Booking.util.BookingMapper;
 import com.oleksandr.monolith.Booking.Service.BookingService;
 import com.oleksandr.monolith.Ticket.DTO.TicketDTO;
+import com.oleksandr.monolith.Ticket.EntityRepo.TICKET_STATUS;
 import com.oleksandr.monolith.Ticket.Service.TicketService;
 import com.oleksandr.monolith.Ticket.util.TicketMapper;
 import com.oleksandr.monolith.User.DTO.UserSummaryDTO;
@@ -51,6 +52,10 @@ public class BookingCoordinator {
     @Transactional
     public BookingSummaryDTO cancelBooking(UUID bookingId, UUID userId) {
         var booking = bookingService.findById(bookingId);
+
+        if(booking.getTicket().getStatus().equals(TICKET_STATUS.SOLD)){
+            throw new BookingAccessDeniedException("You can't cancel sold ticket");
+        }
 
         if (!booking.getUser().getId().equals(userId))
             throw new BookingAccessDeniedException("User id its not equals to booking's user id");

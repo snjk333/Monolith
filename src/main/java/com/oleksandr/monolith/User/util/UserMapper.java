@@ -4,6 +4,7 @@ import com.oleksandr.monolith.Booking.DTO.BookingDTO;
 import com.oleksandr.monolith.Booking.util.BookingMapper;
 import com.oleksandr.monolith.User.DTO.AuthUserDTO;
 import com.oleksandr.monolith.User.DTO.UserDTO;
+import com.oleksandr.monolith.User.DTO.UserProfileResponseDTO;
 import com.oleksandr.monolith.User.DTO.UserSummaryDTO;
 import com.oleksandr.monolith.User.EntityRepo.User;
 import org.springframework.stereotype.Component;
@@ -94,6 +95,17 @@ public class UserMapper {
         if (user == null) throw new IllegalArgumentException("User entity cannot be null");
 
         return AuthUserDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .build();
+    }
+
+    public UserProfileResponseDTO mapProfileResponseDTO(User user) {
+        if (user == null) throw new IllegalArgumentException("User entity cannot be null");
+
+        return UserProfileResponseDTO.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
