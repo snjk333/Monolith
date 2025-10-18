@@ -11,15 +11,24 @@ import com.oleksandr.monolith.Ticket.EntityRepo.TICKET_STATUS;
 import com.oleksandr.monolith.Ticket.Service.TicketService;
 import com.oleksandr.monolith.Ticket.util.TicketMapper;
 import com.oleksandr.monolith.User.DTO.UserSummaryDTO;
+import com.oleksandr.monolith.User.EntityRepo.User;
 import com.oleksandr.monolith.User.Service.UserService;
 import com.oleksandr.monolith.User.util.UserMapper;
 import com.oleksandr.monolith.common.exceptions.BookingAccessDeniedException;
+import com.oleksandr.monolith.integration.payU.PayUClient;
+import com.oleksandr.monolith.integration.payU.dto.PayUAuthResponseDTO;
+import com.oleksandr.monolith.integration.payU.dto.PayUOrderRequestDTO;
+import com.oleksandr.monolith.integration.payU.dto.PayUOrderResponseDTO;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class BookingCoordinator {
 
@@ -31,13 +40,24 @@ public class BookingCoordinator {
     private final UserMapper userMapper;
     private final TicketMapper ticketMapper;
 
-    public BookingCoordinator(UserService userService, TicketService ticketService, BookingService bookingService, BookingMapper bookingMapper, UserMapper userMapper, TicketMapper ticketMapper) {
+    private final PayUClient payUClient;
+
+    @Value("${payu.notify.base.url}")
+    private String notifyBaseUrl;
+
+    @Value("${app.frontend.url}")
+    private String frontendUrlFromProperties;
+
+    private static final String PAYU_NOTIFICATION_PATH = "/monolith/api/payu/notifications";
+
+    public BookingCoordinator(UserService userService, TicketService ticketService, BookingService bookingService, BookingMapper bookingMapper, UserMapper userMapper, TicketMapper ticketMapper, PayUClient payUClient) {
         this.userService = userService;
         this.ticketService = ticketService;
         this.bookingService = bookingService;
         this.bookingMapper = bookingMapper;
         this.userMapper = userMapper;
         this.ticketMapper = ticketMapper;
+        this.payUClient = payUClient;
     }
 
     @Transactional
@@ -105,5 +125,67 @@ public class BookingCoordinator {
         List<Booking> bookingsList = user.getBookings();
 
         return bookingMapper.mapListToSummaryListDto(bookingsList);
+    }
+
+    @Transactional
+    public String initiatePayment(UUID bookingId, UUID userId, String customerIp) {
+        log.info("Initiating payment for booking: {} by user: {}", bookingId, userId);
+
+
+        Booking booking = bookingService.findById(bookingId);
+        User user = booking.getUser();
+        var ticket = booking.getTicket();
+
+        if (!user.getId().equals(userId)) {
+            log.warn("Access denied for user {} trying to pay for booking {}", userId, bookingId);
+            throw new BookingAccessDeniedException("User is not authorized to pay for this booking");
+        }
+
+        PayUAuthResponseDTO authToken = payUClient.getAccessToken();
+        log.info("Successfully got PayU token");
+
+        String totalAmountInGroszy = String.valueOf(((int) (ticket.getPrice()*100)));
+
+        // 5. Создаем DTO покупателя
+        PayUOrderRequestDTO.Buyer buyerDto = PayUOrderRequestDTO.Buyer.builder()
+                .email(user.getEmail())
+                .firstName(user.getUsername())
+                .lastName("User")
+                .phone("123456789")
+                .language("pl")
+                .build();
+
+        PayUOrderRequestDTO.Product productDto = PayUOrderRequestDTO.Product.builder()
+                .name("Bilet na: " + ticket.getEvent().getName())
+                .unitPrice(totalAmountInGroszy)
+                .quantity("1")
+                .build();
+
+        String fullNotifyUrl;
+
+        if (notifyBaseUrl.contains("webhook.site")) {
+            fullNotifyUrl = notifyBaseUrl;
+            log.info("Using webhook.site for testing notifications: {}", fullNotifyUrl);
+        } else {
+            fullNotifyUrl = notifyBaseUrl + PAYU_NOTIFICATION_PATH;
+            log.info("Using custom webhook URL: {}", fullNotifyUrl);
+        }
+        
+        PayUOrderRequestDTO orderRequest = PayUOrderRequestDTO.builder()
+                .customerIp(customerIp)
+                .extOrderId(booking.getId().toString())
+                .description("Rezerwacja biletu: " + ticket.getEvent().getName())
+                .currencyCode("PLN")
+                .totalAmount(totalAmountInGroszy)
+                .buyer(buyerDto)
+                .products(List.of(productDto))
+                .notifyUrl(fullNotifyUrl)
+                .continueUrl(frontendUrlFromProperties + "/payment/success")
+                .build();
+
+        PayUOrderResponseDTO orderResponse = payUClient.createOrder(orderRequest, authToken.getAccessToken());
+        log.info("PayU order created with ID: {}", orderResponse.getOrderId());
+
+        return orderResponse.getRedirectUri();
     }
 }
