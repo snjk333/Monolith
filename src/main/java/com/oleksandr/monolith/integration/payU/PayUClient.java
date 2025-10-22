@@ -78,7 +78,6 @@ public class PayUClient {
         log.info("Creating a new order in PayU for description: {}", orderRequest.getDescription());
         orderRequest.setMerchantPosId(this.merchantPosId);
 
-        // ЛОГИРОВАНИЕ ДЛЯ ОТЛАДКИ
         log.info("📦 PayU Order Request:");
         log.info("  merchantPosId: {}", orderRequest.getMerchantPosId());
         log.info("  customerIp: {}", orderRequest.getCustomerIp());

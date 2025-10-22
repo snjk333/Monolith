@@ -3,6 +3,7 @@ package com.oleksandr.monolith.Coordinator;
 import com.oleksandr.monolith.Booking.DTO.BookingDTO;
 import com.oleksandr.monolith.Booking.DTO.BookingDetailsDTO;
 import com.oleksandr.monolith.Booking.DTO.BookingSummaryDTO;
+import com.oleksandr.monolith.Booking.EntityRepo.BOOKING_STATUS;
 import com.oleksandr.monolith.Booking.EntityRepo.Booking;
 import com.oleksandr.monolith.Booking.util.BookingMapper;
 import com.oleksandr.monolith.Booking.Service.BookingService;
@@ -74,7 +75,11 @@ public class BookingCoordinator {
         var booking = bookingService.findById(bookingId);
 
         if(booking.getTicket().getStatus().equals(TICKET_STATUS.SOLD)){
-            throw new BookingAccessDeniedException("You can't cancel sold ticket");
+            throw new BookingAccessDeniedException("You can't cancel booking with sold ticket");
+        }
+
+        if(booking.getStatus().equals(BOOKING_STATUS.WAITING_FOR_PAYMENT)){
+            throw new BookingAccessDeniedException("You can't booking ticket while payment");
         }
 
         if (!booking.getUser().getId().equals(userId))
@@ -131,7 +136,6 @@ public class BookingCoordinator {
     public String initiatePayment(UUID bookingId, UUID userId, String customerIp) {
         log.info("Initiating payment for booking: {} by user: {}", bookingId, userId);
 
-
         Booking booking = bookingService.findById(bookingId);
         User user = booking.getUser();
         var ticket = booking.getTicket();
@@ -141,12 +145,12 @@ public class BookingCoordinator {
             throw new BookingAccessDeniedException("User is not authorized to pay for this booking");
         }
 
+        booking.setStatus(BOOKING_STATUS.WAITING_FOR_PAYMENT);
         PayUAuthResponseDTO authToken = payUClient.getAccessToken();
         log.info("Successfully got PayU token");
 
         String totalAmountInGroszy = String.valueOf(((int) (ticket.getPrice()*100)));
 
-        // 5. Создаем DTO покупателя
         PayUOrderRequestDTO.Buyer buyerDto = PayUOrderRequestDTO.Buyer.builder()
                 .email(user.getEmail())
                 .firstName(user.getUsername())
@@ -156,7 +160,7 @@ public class BookingCoordinator {
                 .build();
 
         PayUOrderRequestDTO.Product productDto = PayUOrderRequestDTO.Product.builder()
-                .name("Bilet na: " + ticket.getEvent().getName())
+                .name("Ticket to: " + ticket.getEvent().getName())
                 .unitPrice(totalAmountInGroszy)
                 .quantity("1")
                 .build();
@@ -174,7 +178,7 @@ public class BookingCoordinator {
         PayUOrderRequestDTO orderRequest = PayUOrderRequestDTO.builder()
                 .customerIp(customerIp)
                 .extOrderId(booking.getId().toString())
-                .description("Rezerwacja biletu: " + ticket.getEvent().getName())
+                .description("Ticket reservation: " + ticket.getEvent().getName())
                 .currencyCode("PLN")
                 .totalAmount(totalAmountInGroszy)
                 .buyer(buyerDto)

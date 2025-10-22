@@ -4,5 +4,6 @@ public enum BOOKING_STATUS {
     CREATED,
     PAID,
     CANCELLED,
-    EXPIRED
+    EXPIRED,
+    WAITING_FOR_PAYMENT
 }
