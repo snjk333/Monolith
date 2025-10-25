@@ -23,6 +23,12 @@ public class User {
     private String username;
     private String email;
 
+    private String firstName;
+
+    private String lastName;
+
+    private String phoneNumber;
+
     @Enumerated(EnumType.STRING)
     private USER_ROLE role;
 

@@ -13,12 +13,10 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
     List<Booking> findAllByUserId(UUID userId);
 
     Optional<Booking> findByUserIdAndTicketId(UUID id, UUID id1);
-    
-    // Поиск активных бронирований для пользователя и билета (исключает отмененные)
+
     @Query("SELECT b FROM Booking b WHERE b.user.id = :userId AND b.ticket.id = :ticketId AND b.status != 'CANCELLED'")
     Optional<Booking> findActiveBookingByUserIdAndTicketId(@Param("userId") UUID userId, @Param("ticketId") UUID ticketId);
-    
-    // Поиск любых активных бронирований для билета (исключает отмененные)
+
     @Query("SELECT b FROM Booking b WHERE b.ticket.id = :ticketId AND b.status != 'CANCELLED'")
     Optional<Booking> findActiveBookingByTicketId(@Param("ticketId") UUID ticketId);
 }

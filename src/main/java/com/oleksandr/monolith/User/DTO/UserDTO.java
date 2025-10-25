@@ -26,6 +26,10 @@ public class UserDTO {
     @NotBlank
     private String email;
 
+    private String firstName;
+    private String lastName;
+    private String phoneNumber;
+
     @NotNull
     private USER_ROLE role;
 

@@ -35,6 +35,9 @@ public class UserMapper {
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .phoneNumber(user.getPhoneNumber())
                 .role(user.getRole())
                 .bookings(bookingsDto)
                 .build();
@@ -48,12 +51,14 @@ public class UserMapper {
         user.setId(dto.getId());
         user.setUsername(dto.getUsername());
         user.setEmail(dto.getEmail());
+        user.setFirstName(dto.getFirstName());
+        user.setLastName(dto.getLastName());
+        user.setPhoneNumber(dto.getPhoneNumber());
         user.setRole(dto.getRole());
-        user.setBookings(new ArrayList<>()); // bookings подгружаем отдельно через сервис
+        user.setBookings(new ArrayList<>()); // booking add at service from db
         return user;
     }
 
-    // Обновление существующего пользователя
     public User updateUserInformation(User user, UserDTO dto) {
         if (dto.getUsername() != null) user.setUsername(dto.getUsername());
         if (dto.getEmail() != null) user.setEmail(dto.getEmail());
@@ -61,7 +66,6 @@ public class UserMapper {
         return user;
     }
 
-    // Список сущностей → список DTO
     public List<UserDTO> mapListToDtoList(List<User> users) {
         return users == null ? List.of() :
                 users.stream()
@@ -76,6 +80,9 @@ public class UserMapper {
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .phoneNumber(user.getPhoneNumber())
                 .build();
     }
 
@@ -87,7 +94,10 @@ public class UserMapper {
         user.setUsername(dto.getUsername());
         user.setEmail(dto.getEmail());
         user.setRole(dto.getRole());
-        user.setBookings(new ArrayList<>()); // bookings подгружаем отдельно через сервис
+        user.setFirstName(dto.getFirstName());
+        user.setLastName(dto.getLastName());
+        user.setPhoneNumber(dto.getPhoneNumber());
+        user.setBookings(new ArrayList<>());
         return user;
     }
 
@@ -98,6 +108,9 @@ public class UserMapper {
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .phoneNumber(user.getPhoneNumber())
                 .role(user.getRole())
                 .build();
     }
@@ -109,6 +122,9 @@ public class UserMapper {
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .phoneNumber(user.getPhoneNumber())
                 .role(user.getRole())
                 .build();
     }

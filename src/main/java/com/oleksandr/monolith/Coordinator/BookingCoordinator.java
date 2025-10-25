@@ -149,19 +149,19 @@ public class BookingCoordinator {
         PayUAuthResponseDTO authToken = payUClient.getAccessToken();
         log.info("Successfully got PayU token");
 
-        String totalAmountInGroszy = String.valueOf(((int) (ticket.getPrice()*100)));
+        String totalAmount = String.valueOf(((int) (ticket.getPrice()*100)));
 
         PayUOrderRequestDTO.Buyer buyerDto = PayUOrderRequestDTO.Buyer.builder()
                 .email(user.getEmail())
-                .firstName(user.getUsername())
-                .lastName("User")
-                .phone("123456789")
+                .firstName(user.getFirstName() != null ? user.getFirstName() : user.getUsername())
+                .lastName(user.getLastName() != null ? user.getLastName() : "User")
+                .phone(user.getPhoneNumber() != null ? user.getPhoneNumber() : "123456789")
                 .language("pl")
                 .build();
 
         PayUOrderRequestDTO.Product productDto = PayUOrderRequestDTO.Product.builder()
                 .name("Ticket to: " + ticket.getEvent().getName())
-                .unitPrice(totalAmountInGroszy)
+                .unitPrice(totalAmount)
                 .quantity("1")
                 .build();
 
@@ -180,7 +180,7 @@ public class BookingCoordinator {
                 .extOrderId(booking.getId().toString())
                 .description("Ticket reservation: " + ticket.getEvent().getName())
                 .currencyCode("PLN")
-                .totalAmount(totalAmountInGroszy)
+                .totalAmount(totalAmount)
                 .buyer(buyerDto)
                 .products(List.of(productDto))
                 .notifyUrl(fullNotifyUrl)

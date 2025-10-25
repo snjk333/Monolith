@@ -85,6 +85,7 @@ public class EventTicketCoordinator {
         return eventMapper.mapToDto(savedEvent);
     }
 
+    @Transactional(readOnly = true)
     public List<TicketDTO> getTicketsByEventId(UUID id) {
         Event event = eventService.findById(id);
         if (event == null) return new ArrayList<>();
