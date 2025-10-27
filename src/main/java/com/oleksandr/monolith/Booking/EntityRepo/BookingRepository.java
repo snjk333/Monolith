@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,4 +20,9 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
 
     @Query("SELECT b FROM Booking b WHERE b.ticket.id = :ticketId AND b.status != 'CANCELLED'")
     Optional<Booking> findActiveBookingByTicketId(@Param("ticketId") UUID ticketId);
+
+
+    List<Booking> findByStatusAndCreatedAtBefore(BOOKING_STATUS status, LocalDateTime dateTime);
+
+    long countByStatus(BOOKING_STATUS status);
 }
