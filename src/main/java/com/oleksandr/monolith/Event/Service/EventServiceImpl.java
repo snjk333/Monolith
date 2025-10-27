@@ -5,8 +5,12 @@ import com.oleksandr.monolith.Event.DTO.Response.EventSummaryDTO;
 import com.oleksandr.monolith.Event.EntityRepo.Event;
 import com.oleksandr.monolith.Event.util.EventMapper;
 import com.oleksandr.monolith.Event.EntityRepo.EventRepository;
-import com.oleksandr.monolith.Ticket.DTO.TicketDTO;
 import com.oleksandr.monolith.common.exceptions.ResourceNotFoundException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class EventServiceImpl implements EventService {
 
@@ -43,6 +48,30 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventSummaryDTO> getAllEventsSummary() {
         return eventMapper.mapListToSummaryList(this.getAllEvents());
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Page<EventSummaryDTO> getAllEventsSummaryPaginated(int page, int size) {
+        log.debug("Getting paginated events: page={}, size={}", page, size);
+        
+        if (page < 0) {
+            throw new IllegalArgumentException("Page number cannot be negative");
+        }
+        if (size < 1 || size > 100) {
+            throw new IllegalArgumentException("Page size must be between 1 and 100");
+        }
+        
+        Sort sort = Sort.by(Sort.Direction.ASC, "eventDate");
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Event> eventPage = eventRepository.findAll(pageable);
+        
+        log.info("Retrieved {} events (page {}/{}) sorted by eventDate", 
+            eventPage.getNumberOfElements(), 
+            eventPage.getNumber(), 
+            eventPage.getTotalPages());
+        
+        return eventPage.map(eventMapper::mapToSummaryDto);
     }
 
     @Override

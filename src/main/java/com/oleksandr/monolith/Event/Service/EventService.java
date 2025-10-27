@@ -4,6 +4,7 @@ import com.oleksandr.monolith.Event.DTO.Response.EventDetailsDTO;
 import com.oleksandr.monolith.Event.DTO.Response.EventSummaryDTO;
 import com.oleksandr.monolith.Event.EntityRepo.Event;
 import com.oleksandr.monolith.Event.DTO.EventDTO;
+import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -18,6 +19,8 @@ public interface EventService {
     Event saveEventEntity(Event event);
 
     List<EventSummaryDTO> getAllEventsSummary();
+    
+    Page<EventSummaryDTO> getAllEventsSummaryPaginated(int page, int size);
 
     EventDetailsDTO getEventDetails(UUID id);
 }
