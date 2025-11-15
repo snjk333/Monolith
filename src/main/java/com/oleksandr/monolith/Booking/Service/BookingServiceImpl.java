@@ -3,6 +3,7 @@ package com.oleksandr.monolith.Booking.Service;
 import com.oleksandr.monolith.Booking.EntityRepo.BOOKING_STATUS;
 import com.oleksandr.monolith.Booking.EntityRepo.Booking;
 import com.oleksandr.monolith.Booking.EntityRepo.BookingRepository;
+import com.oleksandr.monolith.Ticket.EntityRepo.TICKET_STATUS;
 import com.oleksandr.monolith.common.exceptions.BookingConflictException;
 import com.oleksandr.monolith.common.exceptions.ResourceNotFoundException;
 import com.oleksandr.monolith.User.EntityRepo.User;
@@ -25,14 +26,17 @@ public class BookingServiceImpl implements BookingService {
         this.bookingRepository = bookingRepository;
     }
 
-    /**
-     * Создает сущность бронирования. Содержит проверку на дубликаты.
-     */
+
     @Transactional
     @Override
     public Booking createBooking(User user, Ticket ticket) {
         log.info("Creating booking entity for userId={} and ticketId={}", user.getId(), ticket.getId());
-        // Проверка на существующее активное бронирование для этого билета
+
+        if (ticket.getStatus() != TICKET_STATUS.RESERVED) {
+            log.warn("Cannot create booking for ticket with status: ticketId={}, status={}", ticket.getId(), ticket.getStatus());
+            throw new BookingConflictException("Ticket must be reserved before creating booking: " + ticket.getId());
+        }
+        
         bookingRepository.findActiveBookingByTicketId(ticket.getId())
                 .ifPresent(b -> {
                     log.warn("Active booking conflict detected for ticket: ticketId={}, existingBookingId={}, existingUserId={}, status={}", 
@@ -48,9 +52,6 @@ public class BookingServiceImpl implements BookingService {
         return bookingRepository.saveAndFlush(booking);
     }
 
-    /**
-     * Отменяет бронирование.
-     */
     @Transactional
     @Override
     public Booking cancelBooking(Booking booking) {
@@ -63,9 +64,6 @@ public class BookingServiceImpl implements BookingService {
         return bookingRepository.saveAndFlush(booking);
     }
 
-    /**
-     * Завершает бронирование (оплачено).
-     */
     @Transactional
     @Override
     public Booking completeBooking(Booking booking) {

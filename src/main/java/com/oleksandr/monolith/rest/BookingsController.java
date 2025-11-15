@@ -43,6 +43,7 @@ public class BookingsController {
         return ResponseEntity.ok(booking);
     }
 
+
     @GetMapping("/{id}")
     public BookingDetailsDTO getBookingDetails(@PathVariable UUID id)
     {

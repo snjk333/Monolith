@@ -21,10 +21,6 @@ public class EventMapper {
         this.ticketMapper = ticketMapper;
     }
 
-    /**
-     * Общий маппинг DTO -> Entity (используется редко, лучше использовать mapToEntityForInsert для вставки).
-     * При наличии id у тикета сохраняем его — чтобы не терять внешний UUID.
-     */
     public Event mapToEntity(EventDTO dto) {
         if (dto == null) throw new IllegalArgumentException("EventDTO cannot be null");
 
@@ -41,7 +37,6 @@ public class EventMapper {
             for (TicketDTO tDto : dto.getTickets()) {
                 if (tDto == null) continue;
                 Ticket t = ticketMapper.mapToEntity(tDto);
-                // Сохраняем внешний id если он есть — не обнуляем его.
                 if (tDto.getId() != null) t.setId(tDto.getId());
                 t.setEvent(event);
                 tickets.add(t);
@@ -51,9 +46,6 @@ public class EventMapper {
         return event;
     }
 
-    /**
-     * Альтернативный (упрощённый) метод обновления — оставлен для совместимости.
-     */
     public Event updateEventInformation(Event eventToChange, EventDTO dto) {
         if (dto == null) return eventToChange;
 
@@ -148,10 +140,6 @@ public class EventMapper {
                 .build();
     }
 
-    /**
-     * Использовать при вставке нового события (insert). Сохраняем внешний UUID'ы.
-     * Не обнуляем id у тикетов — если внешний источник присылает UUID, мы хотим его сохранить.
-     */
     public Event mapToEntityForInsert(EventDTO dto) {
         if (dto == null) throw new IllegalArgumentException("EventDTO cannot be null");
 
@@ -178,14 +166,6 @@ public class EventMapper {
         return event;
     }
 
-    /**
-     * Полная синхронизация: апдейтим поля мероприятия + синхронизируем коллекцию билетов.
-     * Логика:
-     *  - сопоставление существующих билетов по ID (если ID в сущности != null)
-     *  - обновление найденных
-     *  - добавление новых (в том числе тех, у которых id == null)
-     *  - удаление тех билетов, которые есть в entity, но отсутствуют в dto (по id)
-     */
     public void updateEntityFromDto(Event entity, EventDTO dto) {
         if (entity == null || dto == null) return;
 
@@ -198,7 +178,6 @@ public class EventMapper {
         if (dto.getTickets() != null) {
             if (entity.getTickets() == null) entity.setTickets(new ArrayList<>());
 
-            // Карта по существующим билетам: только те, у которых уже есть id
             Map<UUID, Ticket> existingTicketsMap = entity.getTickets().stream()
                     .filter(t -> t.getId() != null)
                     .collect(Collectors.toMap(Ticket::getId, t -> t));
@@ -213,25 +192,21 @@ public class EventMapper {
                     dtoTicketIds.add(tid);
                     Ticket existingTicket = existingTicketsMap.get(tid);
                     if (existingTicket != null) {
-                        // обновляем in-place
                         ticketMapper.updateEntityFromDto(existingTicket, ticketDto);
                         continue;
                     } else {
-                        // новый билет с внешним id
                         Ticket newTicket = ticketMapper.mapToEntity(ticketDto);
                         if (ticketDto.getId() != null) newTicket.setId(ticketDto.getId());
                         newTicket.setEvent(entity);
                         entity.getTickets().add(newTicket);
                     }
                 } else {
-                    // новый билет без внешнего id — добавляем как новый (Hibernate присвоит id)
                     Ticket newTicket = ticketMapper.mapToEntity(ticketDto);
                     newTicket.setEvent(entity);
                     entity.getTickets().add(newTicket);
                 }
             }
 
-            // удаляем билеты, которых нет в dto (удаляем только те, у которых есть id)
             entity.getTickets().removeIf(ticket -> ticket.getId() != null && !dtoTicketIds.contains(ticket.getId()));
         }
     }

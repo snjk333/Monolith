@@ -144,9 +144,9 @@ public class BookingCoordinator {
             log.warn("Access denied for user {} trying to pay for booking {}", userId, bookingId);
             throw new BookingAccessDeniedException("User is not authorized to pay for this booking");
         }
-
         booking.setStatus(BOOKING_STATUS.WAITING_FOR_PAYMENT);
         PayUAuthResponseDTO authToken = payUClient.getAccessToken();
+
         log.info("Successfully got PayU token");
 
         String totalAmount = String.valueOf(((int) (ticket.getPrice()*100)));
@@ -158,13 +158,11 @@ public class BookingCoordinator {
                 .phone(user.getPhoneNumber() != null ? user.getPhoneNumber() : "123456789")
                 .language("pl")
                 .build();
-
         PayUOrderRequestDTO.Product productDto = PayUOrderRequestDTO.Product.builder()
                 .name("Ticket to: " + ticket.getEvent().getName())
                 .unitPrice(totalAmount)
                 .quantity("1")
                 .build();
-
         String fullNotifyUrl;
 
         if (notifyBaseUrl.contains("webhook.site")) {

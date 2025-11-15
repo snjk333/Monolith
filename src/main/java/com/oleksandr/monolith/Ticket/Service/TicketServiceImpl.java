@@ -23,9 +23,6 @@ public class TicketServiceImpl implements TicketService {
         this.ticketRepository = ticketRepository;
     }
 
-    /**
-     * Резервирует билет. Содержит всю логику проверки доступности и защиты от гонок.
-     */
     @Transactional
     @Override
     public Ticket reserveTicket(UUID ticketId) {
@@ -49,9 +46,6 @@ public class TicketServiceImpl implements TicketService {
         }
     }
 
-    /**
-     * Помечает билет как доступный.
-     */
     @Transactional
     @Override
     public void markAvailable(Ticket ticket) {
@@ -60,9 +54,6 @@ public class TicketServiceImpl implements TicketService {
         ticketRepository.saveAndFlush(ticket);
     }
 
-    /**
-     * Помечает билет как проданный.
-     */
     @Transactional
     @Override
     public void markSold(Ticket ticket) {
@@ -75,9 +66,6 @@ public class TicketServiceImpl implements TicketService {
         ticketRepository.saveAndFlush(ticket);
     }
 
-    /**
-     * Находит сущность билета по ID.
-     */
     @Transactional(readOnly = true)
     @Override
     public Ticket findById(UUID ticketId) {
@@ -88,9 +76,6 @@ public class TicketServiceImpl implements TicketService {
                 });
     }
 
-    /**
-     * Проверяет, доступен ли билет.
-     */
     @Transactional(readOnly = true)
     @Override
     public boolean isTicketAvailable(UUID ticketId) {
