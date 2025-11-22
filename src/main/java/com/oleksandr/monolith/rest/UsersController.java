@@ -26,13 +26,11 @@ public class UsersController {
         this.bookingCoordinator = bookingCoordinator;
     }
 
-    // GET /users/{id} → получить профиль пользователя (детально)
     @GetMapping("/{id}")
     public UserProfileResponseDTO getUserProfile(@PathVariable UUID id) {
         return userService.getUserProfile(id);
     }
 
-    // PATCH /users/{id} → обновить профиль
     @PatchMapping("/{id}")
     public UserSummaryDTO updateUserProfile(
             @PathVariable UUID id,
@@ -42,7 +40,6 @@ public class UsersController {
     }
 
 
-    // GET /users/{id}/bookings → список бронирований пользователя
     @GetMapping("/{id}/bookings")
     public List<BookingSummaryDTO> getUserBookings(@PathVariable UUID id) {
         return bookingCoordinator.getUserBookings(id);
@@ -53,9 +50,3 @@ public class UsersController {
 
 }
 
-
-/*
-GET /users/{id} → получить профиль пользователя
-PATCH /users/{id} → обновить профиль
-GET /users/{id}/bookings → список бронирований пользователя
- */
