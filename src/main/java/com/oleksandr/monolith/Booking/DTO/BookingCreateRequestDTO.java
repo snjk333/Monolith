@@ -11,5 +11,4 @@ import java.util.UUID;
 @Builder
 public class BookingCreateRequestDTO {
     private UUID ticketId;
-    private UUID userId;
 }
